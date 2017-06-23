@@ -10,24 +10,14 @@
 library(shiny)
 library( DT )
 
-# Define UI for application that draws a histogram
+# Define UI for application that creates a datatables
 ui <- fluidPage(
    
    # Application title
-   titlePanel("Download Datatable"),
+   titlePanel("Download Datatable")
    
-   # # Sidebar with a slider input for number of bins 
-   # sidebarLayout(
-   #    sidebarPanel(
-   #       sliderInput("bins",
-   #                   "Number of bins:",
-   #                   min = 1,
-   #                   max = 50,
-   #                   value = 30)
-   #    ),
-   #    
-      # Show a plot of the generated distribution
-      mainPanel(
+   # Show a plot of the generated distribution
+   , mainPanel(
          DT::dataTableOutput("fancyTable")
       ) # end of main panel
    
@@ -47,11 +37,16 @@ server <- function(input, output) {
                       , buttons = c("csv", "excel", "pdf")
                       , text = "Download"
                     ) ) # end of buttons customization
+                   
+                   # customize the length menu
                   , lengthMenu = list( c(10, 20, -1) # declare values
                                        , c(10, 20, "All") # declare titles
                   ) # end of lengthMenu customization
                   , pageLength = 10
+                   
+                   
                 ) # end of options
+               
      ) # end of datatables
    )
 } # end of server
