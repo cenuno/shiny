@@ -30,7 +30,7 @@ server <- function(input, output) {
      datatable( data = mtcars
                 , extensions = 'Buttons'
                 , options = list( 
-                  dom = "Blfrtip"  #"Bfrtip"
+                  dom = "Blfrtip"
                   , buttons = 
                     list("copy", list(
                       extend = "collection"
