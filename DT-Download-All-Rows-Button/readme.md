@@ -6,7 +6,7 @@
 
 The `DT`<sup>1</sup> package enables HTML tables to be created for visually appealing data tables. To download all rows within a data frame that is being shown in a data table, a little bit of customization is needed.
 
-1. You must set the argument `dom`<sup>2</sup> equal to `"Blfrtip"` to enable the download button and the "Show Entries" button the coexist at the top right.
+1. You must set the argument `dom`<sup>2</sup> equal to `"Blfrtip"` to enable the download button and the "Show Entries" button to coexist at the top right.
 
 2. This coexistence enables you to tell manually declare which values will appear in the "Show Entries" button. 
 
