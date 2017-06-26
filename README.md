@@ -11,6 +11,19 @@ The `DT` package enables HTML tables to be created for visually appealing data t
 
 This [source code](https://github.com/cenuno/shiny/blob/master/datatable_Buttons_Customization.R) will show you how to download all rows within a data frame that is being shown in a datatable.
 
+```R
+
+# Install necessary packages
+install.packages( c("shiny", "DT") )
+
+# Load necessary packages
+library( shiny )
+library( DT )
+
+# Run shiny app from your R/RStudio Console
+shiny::runUrl("https://github.com/cenuno/shiny/master.zip")
+```
+
 For more information, please see the following sources:
 
 * [RStudio DataTables Extension webpage](https://rstudio.github.io/DT/extensions.html)
