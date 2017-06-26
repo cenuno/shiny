@@ -21,7 +21,7 @@ library( shiny )
 library( DT )
 
 # Run shiny app from your R/RStudio Console
-shiny::runUrl("https://github.com/cenuno/shiny/master.zip")
+shiny::runUrl("https://github.com/cenuno/shiny/archive/master.zip")
 ```
 
 For more information, please see the following sources:
