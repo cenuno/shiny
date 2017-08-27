@@ -6,6 +6,33 @@
 
 The goal is simple: to make finding a CPS school of interest easier using open-source tools. 
 
+## Run App from RStudio/R Console
+
+Copy and paste the following R commands to run the app locally on your machine:
+
+```R
+# Install necessary packages
+install.packages( c("shiny", "DT", "shinydashboard", "dplyr"
+                     , "magrittr", "htmltools", "htmlwidgets"
+                     , "rgdal", "splancs", "stringr", "rgeos" 
+                     , "devtools"
+                     ) )
+                     
+# install `leaflet` package from source
+# for more info, click here: https://rstudio.github.io/leaflet/
+devtools::install_github("rstudio/leaflet")
+
+# Load necessary packages
+library( shiny )
+
+# Run shiny app from your R/RStudio Console
+shiny::runUrl( url = "https://github.com/cenuno/shiny/archive/master.zip"
+                , subdir = "cps_locator"
+                )
+```
+
+## Next Steps
+
 As of August 27, 2017 deployment, here is what needs to continue to be done:
 
 - [x] [Launch Version 1.0 of App](https://cenuno.shinyapps.io/cps_locator/)
