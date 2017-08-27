@@ -46,4 +46,4 @@ As of August 27, 2017 deployment, here is what needs to continue to be done:
 
 Thank you everyone for your feedback and encouragement on this project!
 
-#Last updated on August 27, 2017*
+*Last updated on August 27, 2017*
