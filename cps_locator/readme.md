@@ -9,7 +9,7 @@ The goal is simple: to make finding a CPS school of interest easier using open-s
 As of August 27, 2017 deployment, here is what needs to continue to be done:
 
 - [x] [Launch Version 1.0 of App](https://cenuno.shinyapps.io/cps_locator/)
-- [x] Post .R script of Version 1.0
+- [x] [Post .R script of Version 1.0](https://github.com/cenuno/shiny/blob/master/cps_locator/app.R)
 - [ ] Solicit feedback
 - [ ] Build a regular expression tool that returns a list of CPS schools based on user-defined grade level(s) of interest
 - [ ] Use the Checkbox Shiny Widget to allow users to filter which CPS schools appear on the Leaflet map based on the type of school (i.e. neighborhood, charter, military academy, etc.)
@@ -18,3 +18,5 @@ As of August 27, 2017 deployment, here is what needs to continue to be done:
 - [ ] Update .R script of Version 2.0
 
 Thank you everyone for your feedback and encouragement on this project!
+
+#Last updated on August 27, 2017*
