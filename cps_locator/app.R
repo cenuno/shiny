@@ -50,6 +50,32 @@ cps_sy1617 <- read.csv( file = cps_sy1617_url
                         , stringsAsFactors = FALSE
 )
 
+# create HyperLink
+createTwitterLink <- function( val ) {
+  i <- 1
+  while( length( val ) >= i ) {
+    if( val[i] != ""){
+      sprintf( 
+        paste0( "<a href='"
+                , val[i]
+                , "' target='_blank'"
+                , " class='fa fa-twitter'>"
+                , "Twitter"
+                , "</a>"
+                , val[i]
+        )
+      )
+      return( val )
+    } else{
+      return( val )
+    }
+    # add one to counter
+    i <- i + 1
+  }
+}
+
+cps_sy1617$Active_Twitter <- createTwitterLink( cps_sy1617$Twitter )
+
 # Transform CPS School Profile urls from static to active
 cps_sy1617$Active_CPS_School_Profile <- paste0("<a href='"
                                         , cps_sy1617$CPS_School_Profile
@@ -1392,7 +1418,11 @@ style='width:35px;height:40px;'> Primarily Elementary School"
     # show a datatable for all CPS schools
     if( input$dropDown == "Citywide" ) {
       # make datatable 
-      DT::datatable( data = cps_sy1617
+      DT::datatable( data = dplyr::select( cps_sy1617
+                                           , School_ID
+                                           , Long_Name
+                                           , Active_Twitter
+      )
                  , rownames = FALSE
                  , caption = "Table 1: School profile information for all schools in the Chicago Public School district for the school year 2016-2017."
                  , extensions = 'Buttons'
@@ -1453,7 +1483,8 @@ style='width:35px;height:40px;'> Primarily Elementary School"
       
     } # end of else statement
     
-  }) # end of render datatable
+  } , escape = FALSE
+  ) # end of render datatable
   
   
 } # end of server
