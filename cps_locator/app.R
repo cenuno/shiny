@@ -1180,22 +1180,21 @@ style='width:35px;height:40px;'> Primarily Elementary School"
   # render myMap
   output$myMap <- leaflet::renderLeaflet({
     
+    # Create a palette that maps factor levels to colors
+    pal <- leaflet::colorFactor( palette = c( "#FFFF66" # laser lemon: ES
+                                              , "#214FC6" # new car: HS
+                                              , "#FF6D3A" # pumpkin: MS
+                                              )
+                                 , domain = c( "ES" # elementary
+                                               , "MS" # middle
+                                               , "HS" # high
+                                               )
+                                 )
     
     # if 'Citywide' is selected
     # add all CPS schools to the map
     # as markers
     if( input$dropDown == "Citywide" ){
-      
-      # Create a palette that maps factor levels to colors
-      pal <- leaflet::colorFactor( palette = c( "#FFFF66" # laser lemon: ES
-                                    , "#214FC6" # new car: HS
-                                    , "#FF6D3A" # pumpkin: MS
-                                    )
-                                   , domain = c( "ES" # elementary
-                                                 , "MS" # middle
-                                                 , "HS" # high
-                                                 )
-                                   )
     
       # make leaflet object
       leaflet( data = comarea606 ) %>%
@@ -1222,7 +1221,7 @@ style='width:35px;height:40px;'> Primarily Elementary School"
         
         # add community area polygons
         addPolygons( smoothFactor = 0.2
-                     , fillOpacity = 0.05
+                     , fillOpacity = 0.1
                      , color = "#D9D6CF"
                      , weight = 1
                      , label = str_to_title( comarea606@data$community )
@@ -1278,6 +1277,7 @@ style='width:35px;height:40px;'> Primarily Elementary School"
         addControl( html = custom_legend_icon
                     , position = "bottomleft"
                     )
+      
       # now add an 'else' statement for whenever 
       # 'Citywide' is NOT selected
     } else{
@@ -1305,30 +1305,28 @@ style='width:35px;height:40px;'> Primarily Elementary School"
           # add background to map
           addProviderTiles( providers$CartoDB.DarkMatterNoLabels ) %>%
           
-          # add mini map
-          addMiniMap(
-            tiles = providers$Esri.WorldStreetMap
-            , toggleDisplay = TRUE
-            , minimized = TRUE
-          ) %>%
-          
           # add zoom out button
           addEasyButton( easyButton(
             icon = "ion-android-globe", title = "Zoom Back Out"
-            , onClick = leaflet::JS("function(btn, map){ map.setZoom(10); }")
+            , onClick = leaflet::JS("function(btn, map){ map.setZoom(13); }")
           ) ) %>%
           
           # add community area polygons
           addPolygons( smoothFactor = 0.2
                        , fillOpacity = 0.1
-                       , color = "blue"
+                       , color = "#D9D6CF"
+                       , weight = 1
                        , label = str_to_title( comarea606@data$community )
                        , labelOptions = labelOptions( textsize = "25px"
-                                                      , textOnly = TRUE 
+                                                      , textOnly = TRUE
+                                                      , style = list(
+                                                        "color" = "white"
+                                                        , "font-family" = "Ostrich Sans Black black"
+                                                        , "font-weight" =  "bold"
                                                       )
-                       , highlightOptions = highlightOptions( color = "orange"
-                                                              , weight = 5
-                                                              #, bringToFront = TRUE
+                       )
+                       , highlightOptions = highlightOptions( color = "white"
+                                                              , weight = 7
                        )
           ) %>%
         
@@ -1343,18 +1341,16 @@ style='width:35px;height:40px;'> Primarily Elementary School"
         
         #plot points which are only located
         # in the community area selected
-        addAwesomeMarkers( data = dplyr::filter( cps_sy1617, Community_Area == str_to_upper( input$dropDown ) )
+        addCircleMarkers( data = dplyr::filter( cps_sy1617, Community_Area == str_to_upper( input$dropDown ) )
                     , lng = dplyr::filter( cps_sy1617, Community_Area == str_to_upper( input$dropDown ) )$School_Longitude
                     , lat = dplyr::filter( cps_sy1617, Community_Area == str_to_upper( input$dropDown ) )$School_Latitude
                     , label = dplyr::filter( cps_sy1617, Community_Area == str_to_upper( input$dropDown ) )$Long_Name
-                    , labelOptions = labelOptions( noHide = FALSE
-                                                   , direction = "auto"
-                                                   , textsize = "15px"
-                    )
-                    , icon = awesomeIcons( icon = "graduation-cap"
-                                           , library = "fa"
-                                           , markerColor = dplyr::filter( cps_sy1617, Community_Area == str_to_upper( input$dropDown ) )$Color
-                    )
+                    , labelOptions = labelOptions( style = list( "font-family" = "Ostrich Sans Black"
+                                                                 , "font-weight" =  "bold"
+                                                                 , "cursor" = "pointer"
+                                                                 , "font-size" = "20px"
+                                                                 )
+                                                   ) 
                     , popup = paste0( "<b> School ID: </b>"
                                       , dplyr::filter( cps_sy1617, Community_Area == str_to_upper( input$dropDown ) )$School_ID
                                       , "<br>"
@@ -1373,6 +1369,10 @@ style='width:35px;height:40px;'> Primarily Elementary School"
                                       , "<b> CPS School Profile: </b>"
                                       , dplyr::filter( cps_sy1617, Community_Area == str_to_upper( input$dropDown ) )$CPS_Active_School_Profile
                     )
+                    , color = ~pal( dplyr::filter( cps_sy1617, Community_Area == str_to_upper( input$dropDown ) )$Primary_Category )
+                    , stroke = FALSE
+                    , fillOpacity = 0.5
+                    , radius = 12
         ) %>%
           
         # add custom legend to mark primary category of CPS schools
