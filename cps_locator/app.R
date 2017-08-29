@@ -1277,7 +1277,7 @@ style='width:35px;height:40px;'> Primarily Elementary School"
         # add custom legend to mark primary category of CPS schools
         addControl( html = custom_legend_icon
                     , position = "bottomleft"
-                    ) %>%
+                    )
       # now add an 'else' statement for whenever 
       # 'Citywide' is NOT selected
     } else{
