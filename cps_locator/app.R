@@ -1217,7 +1217,7 @@ style='width:35px;height:40px;'> Primarily Elementary School"
         ) %>% 
         
         # add background to map
-        addProviderTiles(providers$Esri.WorldStreetMap) %>%
+        addProviderTiles( providers$CartoDB.DarkMatterNoLabels ) %>%
         
         # add mini map
         addMiniMap(
@@ -1251,7 +1251,6 @@ style='width:35px;height:40px;'> Primarily Elementary School"
                            , lng = cps_sy1617$School_Longitude
                            , lat = cps_sy1617$School_Latitude
                            , label = cps_sy1617$Long_Name
-                           , clusterOptions = markerClusterOptions()
                            , labelOptions = labelOptions( noHide = FALSE
                                                           , direction = "auto"
                                                           , textsize = "15px"
@@ -1309,7 +1308,7 @@ style='width:35px;height:40px;'> Primarily Elementary School"
           ) %>% 
           
           # add background to map
-          addProviderTiles(providers$Esri.WorldStreetMap) %>%
+          addProviderTiles( providers$CartoDB.DarkMatterNoLabels ) %>%
           
           # add mini map
           addMiniMap(
