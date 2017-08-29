@@ -58,25 +58,6 @@ cps_sy1617$Active_CPS_School_Profile <- paste0("<a href='"
                                         ,"</a>"
 )
 
-# 3 colors by school type
-# colors come from the argument 'markerColor' inside the 'makeAwesomeIcon'
-# function from the leaflet package
-col.schema <- c( "blue" # for high school
-                 , "orange" # for elementary school
-                 , "green" # for middle school
-)
-# make data frame assigning colors to unique business types
-pc_colors <- data.frame( Primary_Category = unique( cps_sy1617$Primary_Category )
-                         , Color = col.schema
-                         , stringsAsFactors = FALSE
-)
-# merge this data frame onto the original data frame
-cps_sy1617 <- left_join( x = pc_colors
-                         , y = cps_sy1617
-                         , by = "Primary_Category"
-)
-
-
 # Create get_poly_matrix_coord function to access
 # coordinate values within multiple polygons 
 # inside a spatial data frame.
@@ -348,11 +329,11 @@ body <- dashboardBody(
                       , status = "info"
                       , solidHeader = TRUE
                       , collapsible = FALSE
-                      , width = 6
+                      , width = 12
                       
                       # create first column
                       , column(
-                        width = 3
+                        width = 2
                         , shiny::selectizeInput( inputId = "dropDown"
                                                  , label = shiny::h3("Select a Community Area:") 
                                                  , choices = c("Citywide"
@@ -363,14 +344,18 @@ body <- dashboardBody(
                       ) # end of first column 
                       
                       # start of column 2
-                      , column( width = 9
+                      , column( width = 10
                                 , leaflet::leafletOutput( outputId = "myMap"
                                                           , height = 700
                                 ) # end of leaflet output
                       ) # end of column 2
                  ) # end of box 1
-                 , box( title = "Quick CPS Facts by Community Area"
-                        , status = "info"
+             ) # end of row 1
+             
+             # start of row 2
+             , fluidRow(
+               box( title = "Quick CPS Facts by Community Area"
+                    , status = "info"
                     , solidHeader = TRUE
                     , collapsible = TRUE
                     , width = 6
@@ -428,12 +413,10 @@ body <- dashboardBody(
                     , infoBoxOutput( outputId = "countCareer"
                                      , width = 6
                     )
-               ) # end of box 2
+               ) # end of box q
                
-             ) # end of row 1
-
-
-             
+             ) # end of row 2
+              
     ) # end of Home Tab
     , tabItem(
       tabName = "Data"
@@ -1204,9 +1187,9 @@ style='width:35px;height:40px;'> Primarily Elementary School"
     if( input$dropDown == "Citywide" ){
       
       # Create a palette that maps factor levels to colors
-      pal <- leaflet::colorFactor( palette = c( "#FF6C00" # orange
-                                    , "#88C26E" # green
-                                    , "#148ECC" # blue
+      pal <- leaflet::colorFactor( palette = c( "#FFFF66" # laser lemon: ES
+                                    , "#214FC6" # new car: HS
+                                    , "#FF6D3A" # pumpkin: MS
                                     )
                                    , domain = c( "ES" # elementary
                                                  , "MS" # middle
@@ -1231,13 +1214,6 @@ style='width:35px;height:40px;'> Primarily Elementary School"
         # add background to map
         addProviderTiles( providers$CartoDB.DarkMatterNoLabels ) %>%
         
-        # add mini map
-        addMiniMap(
-          tiles = providers$Esri.WorldStreetMap
-          , toggleDisplay = TRUE
-          , minimized = TRUE
-        ) %>%
-        
         # add zoom out button
         addEasyButton( easyButton(
           icon = "ion-android-globe", title = "Zoom Back Out"
@@ -1246,8 +1222,8 @@ style='width:35px;height:40px;'> Primarily Elementary School"
         
         # add community area polygons
         addPolygons( smoothFactor = 0.2
-                     , fillOpacity = 0.1
-                     , color = "white"
+                     , fillOpacity = 0.05
+                     , color = "#D9D6CF"
                      , weight = 1
                      , label = str_to_title( comarea606@data$community )
                      , labelOptions = labelOptions( textsize = "25px"
@@ -1260,7 +1236,6 @@ style='width:35px;height:40px;'> Primarily Elementary School"
                      )
                      , highlightOptions = highlightOptions( color = "white"
                                                             , weight = 7
-                                                            , bringToFront = TRUE
                      )
         ) %>%
         
@@ -1269,10 +1244,11 @@ style='width:35px;height:40px;'> Primarily Elementary School"
                            , lng = cps_sy1617$School_Longitude
                            , lat = cps_sy1617$School_Latitude
                            , label = cps_sy1617$Long_Name
-                           , labelOptions = labelOptions( textsize = "15px"
-                                                          , style = list(
+                           , labelOptions = labelOptions( style = list(
                                                             "font-family" = "Ostrich Sans Black"
                                                             , "font-weight" =  "bold"
+                                                            , "cursor" = "pointer"
+                                                            , "font-size" = "20px"
                                                           ))
                            , popup = paste0( "<b> School ID: </b>"
                                              , cps_sy1617$School_ID
@@ -1295,12 +1271,13 @@ style='width:35px;height:40px;'> Primarily Elementary School"
                           , color = ~pal( cps_sy1617$Primary_Category )
                           , stroke = FALSE
                           , fillOpacity = 0.5
+                          , radius = 12
         ) %>%
         
         # add custom legend to mark primary category of CPS schools
         addControl( html = custom_legend_icon
                     , position = "bottomleft"
-                    )
+                    ) %>%
       # now add an 'else' statement for whenever 
       # 'Citywide' is NOT selected
     } else{
