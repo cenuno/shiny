@@ -51,7 +51,7 @@ cps_sy1617 <- read.csv( file = cps_sy1617_url
 )
 
 # Transform CPS School Profile urls from static to active
-cps_sy1617$CPS_School_Profile <- paste0("<a href='"
+cps_sy1617$Active_CPS_School_Profile <- paste0("<a href='"
                                         , cps_sy1617$CPS_School_Profile
                                         , "' target='_blank'>"
                                         , cps_sy1617$CPS_School_Profile
@@ -248,7 +248,7 @@ body <- dashboardBody(
                                      }
                                      /* Main Title Font and Size */
                                      .main-header .logo {
-                                     font-family: "Ostrich Sans", black;
+                                     font-family: "Ostrich Sans Black";
                                      font-weight: bold;
                                      font-size: 40px;
                                      } 
@@ -280,7 +280,7 @@ body <- dashboardBody(
 
                                      /* sidebar text */
                                      .skin-blue .main-sidebar .shiny-bound-input .sidebar-menu {
-                                     font-family: "Ostrich Sans", black;
+                                     font-family: "Ostrich Sans Black";
                                      font-weight: bold;
                                      font-size: 18px;
                                      }
@@ -318,7 +318,7 @@ body <- dashboardBody(
 
                                      /* infoBox Title */
                                      .box.box-solid.box-info>.box-header .box-title {
-                                     font-family: "Ostrich Sans", black;
+                                     font-family: "Ostrich Sans Black";
                                      font-weight: bold;
                                      font-size: 25px;
                                      }
@@ -1197,10 +1197,22 @@ style='width:35px;height:40px;'> Primarily Elementary School"
   # render myMap
   output$myMap <- leaflet::renderLeaflet({
     
+    
     # if 'Citywide' is selected
     # add all CPS schools to the map
     # as markers
     if( input$dropDown == "Citywide" ){
+      
+      # Create a palette that maps factor levels to colors
+      pal <- leaflet::colorFactor( palette = c( "#FF6C00" # orange
+                                    , "#88C26E" # green
+                                    , "#148ECC" # blue
+                                    )
+                                   , domain = c( "ES" # elementary
+                                                 , "MS" # middle
+                                                 , "HS" # high
+                                                 )
+                                   )
     
       # make leaflet object
       leaflet( data = comarea606 ) %>%
@@ -1235,30 +1247,33 @@ style='width:35px;height:40px;'> Primarily Elementary School"
         # add community area polygons
         addPolygons( smoothFactor = 0.2
                      , fillOpacity = 0.1
-                     , color = "blue"
+                     , color = "white"
+                     , weight = 1
                      , label = str_to_title( comarea606@data$community )
                      , labelOptions = labelOptions( textsize = "25px"
                                                     , textOnly = TRUE
+                                                    , style = list(
+                                                      "color" = "white"
+                                                      , "font-family" = "Ostrich Sans Black black"
+                                                      , "font-weight" =  "bold"
                                                     )
-                     , highlightOptions = highlightOptions( color = "orange"
-                                                            , weight = 6
+                     )
+                     , highlightOptions = highlightOptions( color = "white"
+                                                            , weight = 7
                                                             , bringToFront = TRUE
                      )
         ) %>%
         
         # # add all schools
-        addAwesomeMarkers( data = cps_sy1617
+        addCircleMarkers( data = cps_sy1617
                            , lng = cps_sy1617$School_Longitude
                            , lat = cps_sy1617$School_Latitude
                            , label = cps_sy1617$Long_Name
-                           , labelOptions = labelOptions( noHide = FALSE
-                                                          , direction = "auto"
-                                                          , textsize = "15px"
-                           )
-                           , icon = awesomeIcons( icon = "graduation-cap"
-                                                  , library = "fa"
-                                                  , markerColor = cps_sy1617$Color
-                           )
+                           , labelOptions = labelOptions( textsize = "15px"
+                                                          , style = list(
+                                                            "font-family" = "Ostrich Sans Black"
+                                                            , "font-weight" =  "bold"
+                                                          ))
                            , popup = paste0( "<b> School ID: </b>"
                                              , cps_sy1617$School_ID
                                              , "<br>"
@@ -1275,8 +1290,11 @@ style='width:35px;height:40px;'> Primarily Elementary School"
                                              , stringr::str_to_title( cps_sy1617$Community_Area )
                                              , "<br>"
                                              , "<b> CPS School Profile: </b>"
-                                             , cps_sy1617$CPS_School_Profile
+                                             , cps_sy1617$Active_CPS_School_Profile
                            )
+                          , color = ~pal( cps_sy1617$Primary_Category )
+                          , stroke = FALSE
+                          , fillOpacity = 0.5
         ) %>%
         
         # add custom legend to mark primary category of CPS schools
@@ -1376,7 +1394,7 @@ style='width:35px;height:40px;'> Primarily Elementary School"
                                       , stringr::str_to_title( dplyr::filter( cps_sy1617, Community_Area == str_to_upper( input$dropDown ) )$Community_Area )
                                       , "<br>"
                                       , "<b> CPS School Profile: </b>"
-                                      , dplyr::filter( cps_sy1617, Community_Area == str_to_upper( input$dropDown ) )$CPS_School_Profile
+                                      , dplyr::filter( cps_sy1617, Community_Area == str_to_upper( input$dropDown ) )$CPS_Active_School_Profile
                     )
         ) %>%
           
