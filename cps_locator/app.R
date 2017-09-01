@@ -50,31 +50,50 @@ cps_sy1617 <- read.csv( file = cps_sy1617_url
                         , stringsAsFactors = FALSE
 )
 
-# create HyperLink
-createTwitterLink <- function( val ) {
+createLink <- function( link_or_url ) {
+  
+  # start counter
   i <- 1
-  while( length( val ) >= i ) {
-    if( val[i] != ""){
-      sprintf( 
-        paste0( "<a href='"
-                , val[i]
-                , "' target='_blank'"
-                , " class='fa fa-twitter'>"
-                , "Twitter"
-                , "</a>"
-                , val[i]
-        )
-      )
-      return( val )
+  
+  # start while loop
+  while( i <= length( link_or_url ) ) {
+    # if the element of link_or_url does NOT equal ""
+    # reassign the value of that element css features
+    # that will enable the link to be clickable
+    if( link_or_url[i] != "") {
+      link_or_url[i] <- sprintf( 
+        paste0( '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">'
+                                , '<a'
+                                , ' href='
+                                , link_or_url[i]
+                                , ' target="_blank"'
+                                , ' class="btn btn-primary"'
+                                , ' style="background-color: #1DA1F2; border: none; border-radius: 15px;">'
+                                , '<i'
+                                , ' class="fa fa-twitter fa-3x"'
+                                , '</i>'
+                                , '</a>'
+                ) # end of paste0
+      ) # end of CSS formatting
+      
+      # add one to counter
+      i <- i + 1
     } else{
-      return( val )
+      link_or_url[i] <- NA
+      # add one to counter
+      i <- i + 1
     }
-    # add one to counter
-    i <- i + 1
-  }
-}
 
-cps_sy1617$Active_Twitter <- createTwitterLink( cps_sy1617$Twitter )
+  } # end of while loop
+  
+  # return newly formated character vector
+  return( link_or_url )
+  
+} # end of function
+
+
+cps_sy1617$Active_Twitter <- createLink( cps_sy1617$Twitter )
+
 
 # Transform CPS School Profile urls from static to active
 cps_sy1617$Active_CPS_School_Profile <- paste0("<a href='"
@@ -1393,7 +1412,7 @@ style='width:35px;height:40px;'> Primarily Elementary School"
                                       , stringr::str_to_title( dplyr::filter( cps_sy1617, Community_Area == str_to_upper( input$dropDown ) )$Community_Area )
                                       , "<br>"
                                       , "<b> CPS School Profile: </b>"
-                                      , dplyr::filter( cps_sy1617, Community_Area == str_to_upper( input$dropDown ) )$CPS_Active_School_Profile
+                                      , dplyr::filter( cps_sy1617, Community_Area == str_to_upper( input$dropDown ) )$Active_CPS_School_Profile
                     )
                     , color = ~pal( dplyr::filter( cps_sy1617, Community_Area == str_to_upper( input$dropDown ) )$Primary_Category )
                     , stroke = FALSE
@@ -1443,6 +1462,7 @@ style='width:35px;height:40px;'> Primarily Elementary School"
                    # enable horizontal scrolling due to many columns
                    , scrollX = TRUE
                  ) # end of options
+      , escape = FALSE
       ) # end of datatable
       
       # now add an 'else' statement for whenever 
@@ -1478,13 +1498,13 @@ style='width:35px;height:40px;'> Primarily Elementary School"
                    , scrollX = TRUE
                    
                  ) # end of options
+                 , escape = FALSE
                  
       ) # end of datatable
       
     } # end of else statement
     
-  } , escape = FALSE
-  ) # end of render datatable
+  }) # end of render datatable
   
   
 } # end of server
