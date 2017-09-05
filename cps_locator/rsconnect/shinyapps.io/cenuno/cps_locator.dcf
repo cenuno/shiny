@@ -1,0 +1,11 @@
+name: cps_locator
+title: cps_locator
+account: cenuno
+server: shinyapps.io
+appId: 207783
+bundleId: 967539
+url: https://cenuno.shinyapps.io/cps_locator/
+when: 1504579252.1342
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: readme.md
