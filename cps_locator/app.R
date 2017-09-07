@@ -491,105 +491,9 @@ body <- dashboardBody(
   
   # Add some custom CSS to make the title background area the same
   # color as the rest of the header.
-  tags$head( tags$style( shiny::HTML('
-                                     /* content wrapper background */
-                                     .content-wrapper .content {
-                                     background-color: #0033A0;
-                                     }
-  
-                                     /* Main Header Size */
-                                     .main-header {
-                                     height: 50px;
-                                     }
-                                     /* Main Title Font and Size */
-                                     .main-header .logo {
-                                     font-family: "Ostrich Sans Black";
-                                     font-weight: bold;
-                                     font-size: 40px;
-                                     } 
-
-                                     /* Main Title Background Color */
-                                     .skin-blue .main-header .logo {
-                                     background-color: #0033A0;
-                                     }
-
-                                     /* Main Title Hover Background Color */
-                                     .skin-blue .main-header .logo:hover {
-                                     background-color: #0033A0;
-                                     }
-
-                                     /* navbar (rest of the header) */
-                                     .skin-blue .main-header .navbar {
-                                     background-color: #0033A0;
-                                     }        
-
-                                     /* custom logos in the navbar */
-                                     .skin-blue .main-header .navbar .navbar-custom-menu .dropdown a:hover{
-                                     background-color: #F8E219;
-                                     }
-
-                                     /* main sidebar */
-                                     .skin-blue .main-sidebar {
-                                     background-color: #0033A0;
-                                     }
-
-                                     /* sidebar text */
-                                     .skin-blue .main-sidebar .shiny-bound-input .sidebar-menu {
-                                     font-family: "Ostrich Sans Black";
-                                     font-weight: bold;
-                                     font-size: 18px;
-                                     }
-
-                                      
-                                     /* active selected tab in the sidebarmenu */
-                                     .skin-blue .main-sidebar .sidebar .sidebar-menu .active a{
-                                     background-color: #FFFFFF;
-                                     color: #0033A0;
-                                     }
-                                     
-                                     /* other links in the sidebarmenu */
-                                     .skin-blue .main-sidebar .sidebar .sidebar-menu a{
-                                     background-color: #0033A0;
-                                     color: #FFFFFF;
-                                     }
-                                     
-                                     /* other links in the sidebarmenu when hovered */
-                                     .skin-blue .main-sidebar .sidebar .sidebar-menu a:hover{
-                                     background-color: #F8E219; 
-                                     color: #0033A0;
-                                     }
-
-                                     /* toggle button when hovered  */                    
-                                     .skin-blue .main-header .navbar .sidebar-toggle:hover{
-                                     background-color: #F8E219;
-                                     color: #0033A0;
-                                     }
-
-                                     /* infoBox header */
-                                     .box.box-solid.box-info>.box-header{
-                                     color: #fff;
-                                     background: #0033A0;
-                                     }
-
-                                     /* infoBox Title */
-                                     .box.box-solid.box-info>.box-header .box-title {
-                                     font-family: "Ostrich Sans Black";
-                                     font-weight: bold;
-                                     font-size: 25px;
-                                     }
-
-                                     /* infoBox body */
-                                     .box.box-solid.box-info{
-                                     border-bottom-color: #0033A0;
-                                     border-left-color: #0033A0;
-                                     border-right-color: #0033A0;
-                                     border-top-color: #0033A0;
-                                     }
-                                     ') # end of marking characters as HTML
-                         
-                         ) # end of customizing HTML5 style tag
-             
-             ) # end of customizing HTML5 head tag
+  tags$head(
+    tags$link(rel = "stylesheet", type = "text/css", href = "cps_locator.css")
+  )
   
   # Initialize tabs
   , tabItems(
@@ -1825,7 +1729,7 @@ style='width:40px;height:35px;'> Primarily Elementary School"
                       , "Long_Name"
                       , "CPS_Profile"
                       , "Website"
-                      , "Youtube"
+                      , "YouTube"
                       , "Facebook"
                       , "Twitter"
                       , "Pinterest"
@@ -1833,7 +1737,7 @@ style='width:40px;height:35px;'> Primarily Elementary School"
                       , "Website_link"
                       , "Facebook_link"
                       , "Twitter_link"
-                      , "Youtube_link"
+                      , "YouTube_link"
                       , "Pinterest_link"
                       , "Community_Area"
                       )
