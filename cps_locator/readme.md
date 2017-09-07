@@ -47,7 +47,7 @@ As of September 4, 2017 version 2.0 deployment, here is what needs to be done:
 - [x] Separate grades based on a user-defined drop-down selection by using a list
 
 ### Version 3.0
-- [ ] Solicit feedback
+- [x] Solicit feedback
 
 #### Filtering Map
 - [ ] Use the Checkbox Shiny Widget to allow users to filter which CPS schools appear on the Leaflet map based on the type of school (i.e. neighborhood, charter, military academy, etc.)
@@ -65,11 +65,11 @@ As of September 4, 2017 version 2.0 deployment, here is what needs to be done:
 - [ ] Save .RDS file of pre-processed data cleaning work inside of GitHub folder
 - [ ] Build out folder structure of cps_locator app
 - [ ] Split app.r file into two files: ui.r and server.r
-- [ ] Create custom css file and save it in GitHub. This file will store all the color, font, spacing, and other customizations I used to modify the `shinydashboard` appearance.
+- [x] Create custom css file and save it in GitHub. This file will store all the color, font, spacing, and other customizations I used to modify the `shinydashboard` appearance.
 - [ ] Clean up code and ensure readability -- doesn't matter if it works if no one else can learn from what I've written
 
 Thank you everyone for your feedback and encouragement on this project!
 
-*Last updated on September 4, 2017*
+*Last updated on September 6, 2017*
 
 *****************
