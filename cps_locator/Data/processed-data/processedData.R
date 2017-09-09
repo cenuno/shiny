@@ -29,21 +29,13 @@ source_github <- function( url ) {
         )
 } # end of source_github function
 
-# Raw URL of rawData.R script from GitHub
-rawData_url <- "https://raw.githubusercontent.com/cenuno/shiny/master/cps_locator/Data/raw-data/rawData.R"
+# Import comarea606_raw.RDS from the /Data/raw-data folder
+comarea606Raw_RDS_url <- "https://github.com/cenuno/shiny/blob/master/cps_locator/Data/raw-data/comarea606_raw.RDS?raw=true"
+comarea606 <- readRDS( gzcon( url( comarea606Raw_RDS_url ) ) )
 
-# run code from GitHub
-source_github( url = rawData_url )
-
-# export comarea606 as RDS in the /Data/raw-data folder
-saveRDS( object = comarea606
-         , file = "/Users/cristiannuno/RStudio_All/shiny/cps_locator/Data/raw-data/comarea606_raw.RDS"
-         )
-
-# export cps_sy1617 as RDS in the /Data/raw-data folder
-saveRDS( object = cps_sy1617
-         , file = "/Users/cristiannuno/Rstudio_All/shiny/cps_locator/Data/raw-data/cps_sy1617_raw.RDS"
-         )
+# Import cps_sy1617_raw.RDS from the /Data/raw-data folder
+cps_sy1617Raw_RDS_url <- "https://github.com/cenuno/shiny/blob/master/cps_locator/Data/raw-data/cps_sy1617_raw.RDS?raw=true"
+cps_sy1617 <- readRDS( gzcon( url( cps_sy1617Raw_RDS_url ) ) )
 
 # covert school ID to character
 cps_sy1617$School_ID <- as.character( cps_sy1617$School_ID )
