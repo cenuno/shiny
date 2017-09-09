@@ -10,7 +10,7 @@ The data for the CPS Locator comes from the [City of Chicago's Open Data Portal]
 
 This folder contains the following:
 
-* `rawData.R` script: walks the user on how to download a [.CSV](https://en.wikipedia.org/wiki/Comma-separated_values) file of the [Chicago Public Schools - School Profile Information SY1617](https://data.cityofchicago.org/Education/Chicago-Public-Schools-School-Profile-Information-/8i6r-et8s/data) and how to download a [GeoJSON](http://geojson.org/) file of [current community area boundaries in Chicago](https://data.cityofchicago.org/Facilities-Geographic-Boundaries/Boundaries-Community-Areas-current-/cauq-8yn6).
+* [`rawData.R`](https://github.com/cenuno/shiny/blob/master/cps_locator/Data/rawData.R) script: walks the user on how to download a [.CSV](https://en.wikipedia.org/wiki/Comma-separated_values) file of the [Chicago Public Schools - School Profile Information SY1617](https://data.cityofchicago.org/Education/Chicago-Public-Schools-School-Profile-Information-/8i6r-et8s/data) and how to download a [GeoJSON](http://geojson.org/) file of [current community area boundaries in Chicago](https://data.cityofchicago.org/Facilities-Geographic-Boundaries/Boundaries-Community-Areas-current-/cauq-8yn6).
 
 [![How to Download .CSV Data from City of Chicago Open Data Portal](https://github.com/cenuno/shiny/raw/master/cps_locator/Images/Import_CPS_Data_Into_R.png)](https://data.cityofchicago.org/Education/Chicago-Public-Schools-School-Profile-Information-/8i6r-et8s/data)
 
