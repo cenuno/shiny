@@ -4,10 +4,22 @@
 # Purpose:  Dynamic Filtering of Data With Shiny & Leaflet
 #
 
+# # Install necessary packages
+# install.packages( c("shiny", "DT", "shinydashboard", "dplyr"
+#                     , "magrittr", "htmltools", "htmlwidgets"
+#                     , "sp", "splancs", "stringr", "rgeos" 
+#                     , "devtools", "bitops", "RCurl", "rgdal"
+# ) )
+# 
+# # install `leaflet` package from source
+# # for more info, click here: https://rstudio.github.io/leaflet/
+# devtools::install_github( "rstudio/leaflet" )
+
+
 # Import necessary packages
 library( bitops )
 library( RCurl )
-library(shiny)
+library( shiny )
 library( shinydashboard )
 library( DT )
 library( leaflet )
