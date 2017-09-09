@@ -1,10 +1,12 @@
 #
 # Author:   Cristian E. Nuno
-# Date:     August 20, 2017
+# Date:     September 9, 2017
 # Purpose:  Dynamic Filtering of Data With Shiny & Leaflet
 #
 
 # Import necessary packages
+library( bitops )
+library( RCurl )
 library(shiny)
 library( shinydashboard )
 library( DT )
@@ -13,423 +15,64 @@ library( dplyr )
 library( magrittr )
 library( htmltools )
 library( htmlwidgets )
+library( sp )
 library( rgdal )
 library( splancs )
 library( stringr )
 library( rgeos )
 
-# Pre work
-#### Time to Import CPS and Chicago Data ###
+# import necessary function
 
-# save copied link as a character vector
-geojson_comarea_url <- "https://data.cityofchicago.org/api/geospatial/cauq-8yn6?method=export&format=GeoJSON"
+# run code from GitHub function
+source_github <- function( url ) {
+  # load package
+  require(RCurl)
+  
+  # read script lines from website and evaluate
+  # leaving all evaluated objects in the 
+  # global environment
+  script <- getURL( url, ssl.verifypeer = FALSE)
+  eval( parse( text = script )
+        , envir = .GlobalEnv 
+  )
+} # end of source_github function
 
-# transform vector into spatial dataframe
-comarea606 <- readOGR( dsn = geojson_comarea_url
-                       , layer = "OGRGeoJSON"
-                       , stringsAsFactors = FALSE
-)
+# store raw url of gradesServed function
+rawGradesServed_url <- "https://raw.githubusercontent.com/cenuno/shiny/master/cps_locator/Functions/gradesServed.R"
 
-# Find the center of each region and label lat and lon of centers
+# call function from GitHub
+source_github( url = rawGradesServed_url )
+
+################## Pre work ######################
+#### Time to Import Processed CPS SY1617 and  ####
+#### Raw Chicago Community Area Boundary Data ####
+##################################################
+
+# Import cps_sy1617_processed.RDS from the /Data/processed-data folder
+cps_sy1617_Processed_RDS_url <- "https://github.com/cenuno/shiny/blob/master/cps_locator/Data/processed-data/cps_sy1617_processed.RDS?raw=true"
+cps_sy1617 <- readRDS( gzcon( url( cps_sy1617_Processed_RDS_url ) ) )
+
+# Import comarea606_raw.RDS from the /Data/raw-data folder
+comarea606Raw_RDS_url <- "https://github.com/cenuno/shiny/blob/master/cps_locator/Data/raw-data/comarea606_raw.RDS?raw=true"
+comarea606 <- readRDS( gzcon( url( comarea606Raw_RDS_url ) ) )
+
+# Find the center of each polygon
+# and identify the centers by the $community column in comarea606
 centroids <- rgeos::gCentroid( comarea606
                                , byid = TRUE
                                , id = comarea606$community
 )
-centroidLons <- as.list( coordinates(centroids)[,1] ) # obtain longitudinal coords
 
-centroidLats <- as.list( coordinates(centroids)[,2] ) # obtain latitutde coords
+# obtain longitudinal coords by taking all rows from the first column
+# and transfrom from spatial points object
+# to a list object
+centroidLons <- as.list( coordinates(centroids)[,1] ) 
 
+# obtain latitutde coords by taking all rows from the second column
+# and transform from spaital points object
+# to a list object
+centroidLats <- as.list( coordinates(centroids)[,2] ) 
 
-
-# import cps school data for SY1617
-cps_sy1617_url <- "https://data.cityofchicago.org/api/views/8i6r-et8s/rows.csv?accessType=DOWNLOAD"
-
-# transform URL into a data frame using the base `read.csv` function
-cps_sy1617 <- read.csv( file = cps_sy1617_url
-                        , header = TRUE
-                        , stringsAsFactors = FALSE
-)
-
-# covert school ID to character
-cps_sy1617$School_ID <- as.character( cps_sy1617$School_ID )
-# going to add 14 new columns to cps_sy1617
-
-# create function that separates the grades contained in the
-# $Grades_Offered_All column
-separateGrades <- function( csv_column ) {
-  
-  # create list from csv_column
-  csv_column <- as.list( csv_column )
-  
-  # create counter
-  i <- 1
-  
-  # start while loop
-  while( i <= length( csv_column ) ) {
-    
-    # take the first vector inside csv_column
-    # and create new elements
-    if( grepl( pattern = ","
-               , x = csv_column[[i]]
-    ) == TRUE
-    ) {
-      # split by ","
-      # with fixed = TRUE
-      # because I am not regular expressions
-      csv_column[i] <- strsplit( x = csv_column[[i]]
-                                 , split = ","
-                                 , fixed = TRUE
-      )
-      # move the counter by 1
-      i <- i + 1
-    } else{
-      # move the counter by 1
-      i <- i + 1
-    }
-    
-  } # end of while loop
-  
-  # return csv_column
-  return( csv_column )
-  
-} # end of separateGrades function
-
-# use the separateGrades function
-cps_sy1617$Separated_GradesOffered_All <- separateGrades( csv_column = cps_sy1617$Grades_Offered_All )
-
-# name the list by school ID
-names( cps_sy1617$Separated_GradesOffered_All ) <- cps_sy1617$School_ID
-
-# how to separate the entire data frame
-# based on whether or not each particular school
-# serves a particular grade(s)
-gradesServed <- function( a.list.object, grades ) {
-  # start counter
-  i <- 1
-  # create empty character vector
-  empty_character <- character()
-  # start while loop
-  while( length( a.list.object ) >= i ) {
-    # given a set of grades as characters (i.e. "8", not 8)
-    # test if all user defined grades are served by
-    # each school.
-    if( all( grades %in% a.list.object[[i]] ) == FALSE ) {
-      # add one to the counter
-      i <- i + 1
-      
-    } else{
-      # if true
-      # set the i element inside empty_character
-      # to contain the School_ID which serves
-      # the user defined grades
-      empty_character[i] <- names( a.list.object )[i]
-      
-      # add one to counter
-      i <- i + 1
-      
-    } # end of ifelse statement
-  } # end of while loop
-  
-  # return empty_character with no NA values
-  empty_character <- empty_character[ !is.na( empty_character ) ]
-  return( empty_character )
-  
-} # end of function
-
-# enable web addresses to be clickable in datatables
-# using Font Awesome (FA) icons
-# http://fontawesome.io/
-createClickFA <- function( web_address
-                              , btn_background_color
-                              , fa_icon
-                              ) {
-  
-  # start counter
-  i <- 1
-  
-  # start while loop
-  while( i <= length( web_address ) ) {
-    # if the element of link_or_url does NOT equal ""
-    # reassign the value of that element css features
-    # that will enable the link to be clickable
-    if( web_address[i] != "") {
-      
-      web_address[i] <- sprintf( 
-        paste0( '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">'
-                , '<a'
-                , ' href="'
-                , web_address[i]
-                , '"'
-                , ' target="_blank"'
-                , ' class="btn btn-primary"'
-                , ' style="'
-                , 'background-color: '
-                , btn_background_color
-                , ';'
-                , ' border: none; border-radius: 15px;">'
-                , '<i'
-                , ' class="fa '
-                , fa_icon
-                , ' fa-3x"'
-                , ' aria-hidden="true">' # hides icons used just for decoration for screen-readers
-                , '</i>'
-                , '</a>'
-                ) # end of paste0
-      ) # end of CSS formatting
-      
-      # add one to counter
-      i <- i + 1
-    } else{
-      web_address[i] <- NA
-      # add one to counter
-      i <- i + 1
-    }
-
-  } # end of while loop
-  
-  # return newly formated character vector
-  return( web_address )
-  
-} # end of function
-
-# create Twitter Button
-cps_sy1617$Click_Twitter <- createClickFA( web_address = cps_sy1617$Twitter
-                                         , btn_background_color = "#1DA1F2"
-                                         , fa_icon = "fa-twitter"
-                                         )
-
-# create Facebook Button
-cps_sy1617$Click_Facebook <- createClickFA( web_address = cps_sy1617$Facebook
-                                                , btn_background_color = "#3B5998"
-                                                , fa_icon = "fa-facebook-f"
-                                                )
-
-# create Youtube Button
-cps_sy1617$Click_Youtube <- createClickFA( web_address = cps_sy1617$Youtube
-                                               , btn_background_color = "#FF0000"
-                                               , fa_icon = "fa-youtube-play"
-                                               )
-
-# create Pinterest Button
-cps_sy1617$Click_Pinterest <- createClickFA( web_address = cps_sy1617$Pinterest
-                                                 , btn_background_color = "#BD081B"
-                                                 , fa_icon = "fa-pinterest-p"
-                                                 )
-# enable web addresses to be clickable in datatables
-createClickImage <- function( web_address
-                          , img_source
-                          , height
-                          ) {
-  
-  # start counter
-  i <- 1
-  
-  # start while loop
-  while( i <= length( web_address ) ) {
-    # if the element of link_or_url does NOT equal ""
-    # reassign the value of that element css features
-    # that will enable the link to be clickable
-    if( web_address[i] != "") {
-      
-      web_address[i] <- sprintf( 
-        paste0( '<a'
-                , ' href="'
-                , web_address[i]
-                , '"'
-                , ' target="_blank"'
-                , '>'
-                , '<img'
-                , ' src="'
-                , img_source
-                , '"'
-                , ' height="'
-                , height
-                , '">'
-                , '</img>'
-                , '</a>'
-        ) # end of paste0
-      ) # end of CSS formatting
-      
-      # add one to counter
-      i <- i + 1
-    } else{
-      web_address[i] <- NA
-      # add one to counter
-      i <- i + 1
-    }
-    
-  } # end of while loop
-  
-  # return newly formated character vector
-  return( web_address )
-  
-} # end of function
-
-# create clickable CPS school profiles
-cps_sy1617$Click_CPS_Profile <- createClickImage( web_address = cps_sy1617$CPS_School_Profile
-                                                    , img_source = "http://cps.edu/ScriptLibrary/Responsive/images/cpslogo@2x.png"
-                                                    , height = 52
-                                                    )
-
-# create clickable button
-createClickButton <- function( web_address
-                               , btn_background_color
-                               , btn_label
-                               ) {
-  
-  # start counter
-  i <- 1
-  
-  # start while loop
-  while( i <= length( web_address ) ) {
-    # if the element of link_or_url does NOT equal ""
-    # reassign the value of that element css features
-    # that will enable the link to be clickable
-    if( web_address[i] != "") {
-      
-      web_address[i] <- sprintf( 
-        paste0( '<a'
-                , ' href='
-                , web_address[i]
-                , ' target="_blank"'
-                , ' class="btn btn-primary"'
-                , ' style="'
-                , 'background-color: '
-                , btn_background_color
-                , ';'
-                , ' border: none; border-radius: 15px;">'
-                , btn_label
-                , '</a>'
-        ) # end of paste0
-      ) # end of CSS formatting
-      
-      # add one to counter
-      i <- i + 1
-    } else{
-      web_address[i] <- NA
-      # add one to counter
-      i <- i + 1
-    }
-    
-  } # end of while loop
-  
-  # return newly formated character vector
-  return( web_address )
-  
-} # end of function
-
-# create clickable button for each school website
-cps_sy1617$Click_Website <- createClickButton( web_address = cps_sy1617$Website
-                                               , btn_background_color = "#6DAD1D"
-                                               , btn_label = "Website"
-                                               )
-
-# Transform CPS School Profile urls from static to active
-cps_sy1617$Active_CPS_School_Profile <- paste0("<a href='"
-                                        , cps_sy1617$CPS_School_Profile
-                                        , "' target='_blank'>"
-                                        , cps_sy1617$CPS_School_Profile
-                                        ,"</a>"
-)
-
-# Create get_poly_matrix_coord function to access
-# coordinate values within multiple polygons 
-# inside a spatial data frame.
-get_poly_matrix_coord <- function( spatial_poly_df ) {
-  # start counter
-  i <- 1
-  # create empty list
-  empty_list <- list()
-  # start while loop
-  while( nrow( spatial_poly_df ) >= i ) {
-    # fill the empty list with one set of coordinates
-    empty_list[[i]] <- spatial_poly_df@polygons[[i]]@Polygons[[1]]@coords
-    # add 1 to the counter
-    i <- i + 1
-  } # end of while loop
-  return( empty_list )
-} # end of function
-# use the `get_poly_matrix_coord` function
-# to retrieve all coordinate values that reside 
-# within each polygon
-com_area_polygons <- get_poly_matrix_coord( comarea606 ) # list of 77 matrices
-
-# `com_area_polygons` is a list with 77 matrices
-# to label each matrix
-# use the `names` functions and assign its corresponding community area name
-# by calling the "community" variable \
-# inside the `comarea606` spatial polygon data frame
-names( com_area_polygons ) <- comarea606$community
-
-
-# Create 'Community_Area' variable inside the data frame
-# and assign it a value of NA
-cps_sy1617$Community_Area <- NA
-# assigns individual points the name of the polygon they reside in
-get_CA_names <- function( a.data.frame
-                          , a.list.of.matrices
-                          , a.spatial.df ) {
-  # ensure necessary packages are imported
-  require( splancs )
-  require( dplyr )
-  # start your counter
-  i <- 1
-  
-  # start your while loop
-  while( i <= length( a.list.of.matrices )  ) {
-    # 1. df with only long and lat
-    df_lon_lat <- select( a.data.frame
-                          ###### CAUTION #####################
-                          # More than likely, ################
-                          # you will have to replace #########
-                          # the column names to represent ####
-                          # the longitutde and latitude ######
-                          # variables within your data frame #
-                          ####################################
-                          , School_Longitude # double check
-                          , School_Latitude # double check
-    )
-    # rename long as x and lat as y
-    colnames(df_lon_lat)[1] <- "x"
-    colnames(df_lon_lat)[2]  <- "y"
-    
-    # 2. add in.shape to dataframe
-    df_lon_lat$in.shape <- 1:nrow( df_lon_lat) %in%
-      inpip( df_lon_lat
-             , a.list.of.matrices[[i]]
-      )
-    #### THIS IS WHERE YOU HAVE TO FILTER BASED ON WHETHER
-    #### df_lon_lat$in.shape has any TRUE values
-    #### if yes, procceed with steps 3-6
-    #### if no, tell the counter to increase by 1
-    #### and restart the function
-    if( any( df_lon_lat$in.shape ) == FALSE ) {
-      # add one to counter
-      i <- i + 1
-    } else{
-      # 3. give me the elements that are TRUE
-      only_true <- df_lon_lat[ df_lon_lat$in.shape == TRUE, ]
-      
-      # 4. filter the orgs data frame by the row names within step 3
-      # 5. and assign the Community Area polygon name
-      a.data.frame[ as.numeric( row.names( only_true ) ), ]$Community_Area <- a.spatial.df$community[i]
-      
-      # 6. repeat until all community areas are given a name
-      i <- i + 1
-    } # end of else statement
-    
-  } # end of while loop
-  
-  # return a new data frame
-  return( a.data.frame )
-  
-} # end of function
-
-# Run the `get_CA_names` function
-cps_sy1617 <- get_CA_names( a.data.frame = cps_sy1617
-                            , a.list.of.matrices = com_area_polygons
-                            , a.spatial.df = comarea606
-)
 
 ############ Building the Dashboard##################
 
