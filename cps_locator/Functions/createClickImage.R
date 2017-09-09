@@ -16,7 +16,7 @@ createClickImage <- function( web_address
   # start while loop
   while( i <= length( web_address ) ) {
   
-    # if the element of link_or_url does NOT equal ""
+    # if the i element of web_adress does NOT equal ""
     # reassign the value of that element css features
     # that will enable the link to be clickable
     if( web_address[i] != "") {
@@ -54,7 +54,8 @@ createClickImage <- function( web_address
     
   } # end of while loop
   
-  # return hyperlinked image to the environment
+  # return newly formated character vector
+  # if the form of HTML
   return( web_address )
   
 } # end of createClickImage function
