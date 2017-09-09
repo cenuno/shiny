@@ -76,11 +76,15 @@ Thank you everyone for your feedback and encouragement on this project!
 sessionInfo()
 ```
 R version 3.4.1 (2017-06-30)
+
 Platform: x86_64-apple-darwin15.6.0 (64-bit)
+
 Running under: macOS Sierra 10.12.6
 
 Matrix products: default
+
 BLAS: /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/libBLAS.dylib
+
 LAPACK: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRlapack.dylib
 
 locale:
