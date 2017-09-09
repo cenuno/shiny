@@ -16,7 +16,7 @@ This folder contains the following:
 
 [![How to Download GeoJSON data from City of Chicago Open Data Portal](https://github.com/cenuno/shiny/raw/master/cps_locator/Images/Import_CommunityArea_GeoJSON_Into_R.png)](https://data.cityofchicago.org/Facilities-Geographic-Boundaries/Boundaries-Community-Areas-current-/cauq-8yn6)
 
-* `processedData.R` script: walks the user on cleaning and modifying the data from `rawData.R`.
+* `processedData.R` script: walks the user on cleaning and modifying the data from [`rawData.R`](https://github.com/cenuno/shiny/blob/master/cps_locator/Data/rawData.R).
 
 * `cps_sy1617.RDS file`: the clean data from `processedData.R` is exported as `cps_sy1617` - a [`RDS`](http://stat.ethz.ch/R-manual/R-devel/library/base/html/readRDS.html) file which stores a [R data frame object](http://www.r-tutor.com/r-introduction/data-frame).
 
