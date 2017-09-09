@@ -14,8 +14,8 @@ Copy and paste the following R commands to run the app locally on your machine:
 # Install necessary packages
 install.packages( c("shiny", "DT", "shinydashboard", "dplyr"
                      , "magrittr", "htmltools", "htmlwidgets"
-                     , "rgdal", "splancs", "stringr", "rgeos" 
-                     , "devtools"
+                     , "sp", "splancs", "stringr", "rgeos" 
+                     , "devtools", "bitops", "RCurl", "rgdal"
                      ) )
                      
 # install `leaflet` package from source
