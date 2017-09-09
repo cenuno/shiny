@@ -30,7 +30,7 @@ source_github <- function( url ) {
 } # end of source_github function
 
 # Raw URL of rawData.R script from GitHub
-rawData_url <- "https://raw.githubusercontent.com/cenuno/shiny/master/cps_locator/Data/rawData.R"
+rawData_url <- "https://raw.githubusercontent.com/cenuno/shiny/master/cps_locator/Data/raw-data/rawData.R"
 
 # run code from GitHub
 source_github( url = rawData_url )
