@@ -55,7 +55,7 @@ createClickImage <- function( web_address
   } # end of while loop
   
   # return newly formated character vector
-  # if the form of HTML
+  # if the form of HTML 
   return( web_address )
   
 } # end of createClickImage function
