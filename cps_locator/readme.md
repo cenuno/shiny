@@ -20,7 +20,7 @@ install.packages( c("shiny", "DT", "shinydashboard", "dplyr"
                      
 # install `leaflet` package from source
 # for more info, click here: https://rstudio.github.io/leaflet/
-devtools::install_github("rstudio/leaflet")
+devtools::install_github( "rstudio/leaflet" )
 
 # Load necessary packages
 library( shiny )
@@ -62,8 +62,8 @@ As of September 4, 2017 version 2.0 deployment, here is what needs to be done:
 - [ ] Make collapsible buttons white on blue, rather than blue on white
 
 #### Speed Up the App
-- [ ] Save .RDS file of pre-processed data cleaning work inside of GitHub folder
-- [ ] Build out folder structure of cps_locator app
+- [x] Save .RDS file of pre-processed data cleaning work inside of GitHub folder
+- [x] Build out folder structure of cps_locator app
 - [ ] Split app.r file into two files: ui.r and server.r
 - [x] Create custom css file and save it in GitHub. This file will store all the color, font, spacing, and other customizations I used to modify the `shinydashboard` appearance.
 - [ ] Clean up code and ensure readability -- doesn't matter if it works if no one else can learn from what I've written
