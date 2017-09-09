@@ -6,7 +6,7 @@ The data for the CPS Locator comes from the [City of Chicago's Open Data Portal]
 
 > City of Chicago's open data portal is a lets you find city data, find facts about your neighborhood, lets you create maps and graphs about the city, and lets you freely download the data for your own analysis. Many of these datasets are updated at least once a day, and many of them updated several times a day.
 
-![City of Chicago's Open Data Portal](https://github.com/cenuno/shiny/raw/master/cps_locator/Images/CityofChicago_DataPortal_HomePage.png)
+[![City of Chicago's Open Data Portal](https://github.com/cenuno/shiny/raw/master/cps_locator/Images/CityofChicago_DataPortal_HomePage.png)](https://data.cityofchicago.org/)
 
 This folder contains the following:
 
