@@ -25,7 +25,7 @@ comarea606 <- rgdal::readOGR( dsn = geojson_comarea_url
 cps_sy1617_url <- "https://data.cityofchicago.org/api/views/8i6r-et8s/rows.csv?accessType=DOWNLOAD"
 
 # transform URL into a data frame using the base `read.csv` function
-cps_sy1617 <- base::read.csv( file = cps_sy1617_url
+cps_sy1617 <- read.csv( file = cps_sy1617_url
                         , header = TRUE
                         , stringsAsFactors = FALSE
 )
