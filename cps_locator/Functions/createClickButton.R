@@ -16,7 +16,7 @@ createClickButton <- function( web_address
   # start while loop
   while( i <= length( web_address ) ) {
   
-    # if the element of web_address does NOT equal ""
+    # if the i element of web_address does NOT equal ""
     # reassign the value of that element css features
     # that will enable the web_address to be clickable
     if( web_address[i] != "") {
@@ -41,7 +41,7 @@ createClickButton <- function( web_address
       i <- i + 1
       
     } else{
-      # if the element of web_address EQUALS ""
+      # if the i element of web_address EQUALS ""
       # assign it the value of NA
       web_address[i] <- NA
       
@@ -53,6 +53,7 @@ createClickButton <- function( web_address
   } # end of while loop
   
   # return newly formated character vector
+  # in the form of HTML
   return( web_address )
   
 } # end of function
