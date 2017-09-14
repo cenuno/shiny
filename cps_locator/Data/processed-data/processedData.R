@@ -73,8 +73,8 @@ cps_sy1617$Click_Facebook <- createClickFA( web_address = cps_sy1617$Facebook
                                             , fa_icon = "fa-facebook-f"
 )
 
-# create Youtube Button
-cps_sy1617$Click_Youtube <- createClickFA( web_address = cps_sy1617$Youtube
+# create YouTube Button
+cps_sy1617$Click_YouTube <- createClickFA( web_address = cps_sy1617$Youtube
                                            , btn_background_color = "#FF0000"
                                            , fa_icon = "fa-youtube-play"
 )
@@ -150,6 +150,9 @@ cps_sy1617 <- get_CA_names( a.data.frame = cps_sy1617
                             , a.list.of.matrices = com_area_polygons
                             , a.spatial.df = comarea606
 )
+
+# change $Community_Area spelling to title case
+cps_sy1617$Community_Area <- stringr::str_to_title( string = cps_sy1617$Community_Area )
 
 # Save as .RDS file
 saveRDS( object = cps_sy1617
