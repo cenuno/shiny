@@ -73,8 +73,8 @@ cps_sy1617$Click_Facebook <- createClickFA( web_address = cps_sy1617$Facebook
                                             , fa_icon = "fa-facebook-f"
 )
 
-# create Youtube Button
-cps_sy1617$Click_Youtube <- createClickFA( web_address = cps_sy1617$Youtube
+# create YouTube Button
+cps_sy1617$Click_YouTube <- createClickFA( web_address = cps_sy1617$Youtube
                                            , btn_background_color = "#FF0000"
                                            , fa_icon = "fa-youtube-play"
 )
