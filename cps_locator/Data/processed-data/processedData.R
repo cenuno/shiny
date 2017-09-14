@@ -151,6 +151,9 @@ cps_sy1617 <- get_CA_names( a.data.frame = cps_sy1617
                             , a.spatial.df = comarea606
 )
 
+# change $Community_Area spelling to title case
+cps_sy1617$Community_Area <- stringr::str_to_title( string = cps_sy1617$Community_Area )
+
 # Save as .RDS file
 saveRDS( object = cps_sy1617
          , file = "/Users/cristiannuno/RStudio_All/shiny/cps_locator/Data/processed-data/cps_sy1617_processed.RDS"
