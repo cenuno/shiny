@@ -37,6 +37,9 @@ comarea606 <- readRDS( gzcon( url( comarea606Raw_RDS_url ) ) )
 cps_sy1617Raw_RDS_url <- "https://github.com/cenuno/shiny/blob/master/cps_locator/Data/raw-data/cps_sy1617_raw.RDS?raw=true"
 cps_sy1617 <- readRDS( gzcon( url( cps_sy1617Raw_RDS_url ) ) )
 
+# change $Summary to $School_Summary
+colnames( cps_sy1617 )[12] <- "School_Summary"
+
 # covert school ID to character
 cps_sy1617$School_ID <- as.character( cps_sy1617$School_ID )
 # going to add 14 new columns to cps_sy1617
