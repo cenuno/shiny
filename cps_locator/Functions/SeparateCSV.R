@@ -8,7 +8,19 @@
 
 SeparateCSV <- function( csv.column ) {
   
-  # create list from csv_column
+  # require the `stringr` package for text manipulation
+  # https://cran.r-project.org/web/packages/stringr/vignettes/stringr.html
+  require( stringr )
+  
+  # replace all white space (i.e. " ") within the csv.column
+  # with no white space (i.e. "" )
+  # https://stackoverflow.com/questions/5992082/how-to-remove-all-whitespace-from-a-string
+  csv.column <- str_replace_all( string = csv.column
+                                , pattern = fixed(" ")
+                                , replacement = ""
+                               )
+  
+  # create list from csv.column
   csv.column <- as.list( csv.column )
   
   # create counter
