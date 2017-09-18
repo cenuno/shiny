@@ -8,18 +8,6 @@
 
 SeparateCSV <- function( csv.column ) {
   
-  # require the `stringr` package for text manipulation
-  # https://cran.r-project.org/web/packages/stringr/vignettes/stringr.html
-  # require( stringr )
-  
-  # replace all white space (i.e. " ") within the csv.column
-  # with no white space (i.e. "" )
-  # https://stackoverflow.com/questions/5992082/how-to-remove-all-whitespace-from-a-string
-  # csv.column <- stringr::str_replace_all( string = csv.column
-  #                             , pattern = fixed(" ")
-  #                             , replacement = ""
-  #                            )
-  
   # create list from csv.column
   csv.column <- as.list( csv.column )
   
@@ -36,7 +24,7 @@ SeparateCSV <- function( csv.column ) {
               , fixed = FALSE
              ) == TRUE
       ) {
-      # split by ","
+      # split by "," OR ", "
       # with fixed = FALSE
       # because the pattern is a regular expression
       csv.column[i] <- strsplit( x = csv.column[[i]]
