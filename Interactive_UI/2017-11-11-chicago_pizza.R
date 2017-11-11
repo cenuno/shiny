@@ -14,6 +14,7 @@ library( htmltools )
 library( htmlwidgets )
 library( dplyr )
 library( magrittr )
+library( DT )
 
 ##############################
 ## Create Reproducible Data ##
@@ -90,5 +91,112 @@ colnames( chicago.pizza )
 # [1] "Pizzeria"              "Website"               "Phone"                
 # [4] "Full.Address"          "Lat"                   "Lon"                  
 # [7] "Description"           "Deep.Dish"             "Deep.Dish.Ingredients"
+
+###################################
+## build a basic shiny dashboard ##
+###################################
+
+############ Building the Dashboard##################
+
+# A dashboard has 2 parts: a user-interface (ui) and a server
+
+# The UI consists of a header, a sidebar, and a body.
+
+# The server consists of functions that produce any objects
+# that are called inside the UI
+
+## customize header ##
+header <- dashboardHeader( title = "Chicago Deep Dish"
+                           , titleWidth = 400
+                           ,  tags$li( a( href = "https://cenuno.github.io/"
+                                               , img( src = "https://github.com/cenuno/Spatial_Visualizations/raw/master/Images/UrbanDataScience_logo_2017-08-26.png"
+                                                      , title = "Urban Data Science (GitHub)"
+                                                      , height = "50px"
+                                               )
+                                               , style = "padding-top:10px; padding-bottom:10px;"
+                           )
+                           , class = "dropdown"
+                           ) # end of Urban Data Science Logo
+) # end of header
+
+## customize body ##
+body <- dashboardBody( 
+  fluidRow( 
+    box( title = "Battle of Two Pizzas: Giordano's Vs. Lou Malnati's"
+         , status = "info"
+         , solidHeader = TRUE
+         , collapsible = FALSE
+         , width = 12
+         
+         # create first column
+         , column(
+           width = 2
+           # start drop down pizzeriaType menu
+           , shiny::selectizeInput( inputId = "pizzeriaType"
+                                    , label = shiny::h3( "Select Your Favorite Pizzeria:" ) 
+                                    , choices = c("All"
+                                                  , sort( unique( chicago.pizza$Pizzeria ) ) 
+                                    )
+                                    , selected = "All"
+           ) # end of drop down pizerriaType menu
+           
+           # start drop down deepDishType menu
+           , shiny::selectizeInput( inputId = "deepDishType"
+                                    , label = shiny::h3( "Select Your Favorite Type of Deep Dish" )
+                                    , choices = c( "All"
+                                                   , sort( unique( chicago.pizza$Deep.Dish ) ) 
+                                                   )
+                                    , selected = "All"
+                                    ) # end of deepDishType menu
+           
+         ) # end of first column
+         , column(
+           width = 8
+           # create leaflet map
+           , leaflet::leafletOutput( outputId = "myMap", height = 600 )
+         )
+    ) # end of box
+  ) # end of fluidRow 1
+  , fluidRow(
+    box( title = "View the Data"
+         , status = "info"
+         , solidHeader = TRUE
+         , collapsible = FALSE
+         , width = 12
+         
+         # create DataTable to view and export data
+         , DT::dataTableOutput( outputId = "myDT", height = 600 )
+         ) # end of box
+  ) # end of fluidRow2
+) # end of dashboard body
+
+## Shiny UI ##
+ui <- dashboardPage(
+  header
+  , body
+)
+
+# Define server logic
+server <- function(input, output) {
+  
+  # render leaflet output
+  output$myMap <- leaflet::renderLeaflet({
+    
+    # Create a palette that assigns
+    # colors to LM's pizza and to G's pizza
+    pal <- leaflet::colorFactor( palette = c( "#FFFF66" # laser lemon: ES
+                                              , "#214FC6" # new car: HS
+                                              , "#FF6D3A" # pumpkin: MS
+    )
+    , domain = c( "ES" # elementary
+                  , "MS" # middle
+                  , "HS" # high
+    )
+    )
+  })
+}
+
+
+
 
 
