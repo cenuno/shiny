@@ -7,14 +7,14 @@
 ###############################
 ## Import Necessary Packages ##
 ###############################
-library( shiny )
-library( shinydashboard )
-library( leaflet )
-library( htmltools )
-library( htmlwidgets )
-library( dplyr )
-library( magrittr )
-library( DT )
+library( shiny )              # Web Application Framework for R
+library( shinydashboard )     # Create Dashboards with 'Shiny'
+library( leaflet )            # Create Interactive Web Maps with the JavaScript 'Leaflet' Library
+library( htmltools )          # Tools for HTML
+library( htmlwidgets )        # HTML Widgets for R
+library( dplyr )              # A Grammar of Data Manipulation
+library( magrittr )           # Ceci n'est pas une pipe
+library( DT )                 # A Wrapper of the JavaScript Library 'DataTables'
 
 ##############################
 ## Create Reproducible Data ##
@@ -74,13 +74,11 @@ chicago.pizza <- data.frame( Pizzeria = c( rep( x = "Giordano's Pizzeria"
                                                      , times = 2
                                                      )
                                               )
-                             , Deep.Dish.Ingredients = c( rep( x = "Sausage, mushrooms, green peppers and onions."
-                                                               , times = 2
-                                                               )
-                                                          , rep( x = "Lean sausage, some extra cheese and vine-ripened tomato sauce on their butter crust."
-                                                                 , times = 2
-                                                                 )
-                                                          )
+                             , Yelp.Rating = c( 2.5
+                                                , 3.5
+                                                , 4
+                                                , 4.1 # please note that the data was actually a 4 star rating. I made it 4.1 for the purposes of this exercise.
+                                                )
                              , stringsAsFactors = FALSE
                              ) # done creating chicago.pizza data frame
 # check dim
@@ -90,7 +88,7 @@ dim( chicago.pizza ) # [1] 4 9
 colnames( chicago.pizza )
 # [1] "Pizzeria"              "Website"               "Phone"                
 # [4] "Full.Address"          "Lat"                   "Lon"                  
-# [7] "Description"           "Deep.Dish"             "Deep.Dish.Ingredients"
+# [7] "Description"           "Deep.Dish"             "Yelp.Rating"
 
 ###################################
 ## build a basic shiny dashboard ##
@@ -107,11 +105,10 @@ colnames( chicago.pizza )
 
 ## customize header ##
 header <- dashboardHeader( title = "Chicago Deep Dish"
-                           , titleWidth = 200
                            ,  tags$li( a( href = "https://cenuno.github.io/"
                                                , img( src = "https://github.com/cenuno/Spatial_Visualizations/raw/master/Images/UrbanDataScience_logo_2017-08-26.png"
                                                       , title = "Urban Data Science (GitHub)"
-                                                      , height = "50px"
+                                                      , height = "30px"
                                                )
                                                , style = "padding-top:10px; padding-bottom:10px;"
                            )
@@ -156,35 +153,29 @@ body <- dashboardBody(
                                     , selected = "All"
            ) # end of drop down pizerriaType menu
            
-           # start drop down deepDishType menu
-           , shiny::selectizeInput( inputId = "deepDishType"
-                                    , label = shiny::h3( "Select Your Favorite Type of Deep Dish" )
-                                    , choices = c( "All"
-                                                   , sort( unique( chicago.pizza$Deep.Dish ) ) 
-                                                   )
-                                    , selected = "All"
-                                    ) # end of deepDishType menu
+           # create placeholder for second widget
+           , shiny::uiOutput( outputId = "yelpFly" )
            
          ) # end of first column
+         
+         # create placeholder for leaflet map
          , column(
-           width = 8
-           # create leaflet map
+           width = 10
            , leaflet::leafletOutput( outputId = "myMap", height = 600 )
-         )
-    ) # end of box
-  ) # end of fluidRow 1
+         ) # end of second column
+    ) # end of box 1
+  ) # end of fluidRow1
+  
   , fluidRow(
     box( title = "View the Data"
-         , status = "info"
-         , solidHeader = TRUE
-         , collapsible = FALSE
-         , width = 12
-         
-         # create DataTable to view and export data
-         , DT::dataTableOutput( outputId = "myDT", height = 600 )
-         ) # end of box
+      , status = "info"
+      , solidHeader = TRUE
+      , collapsible = FALSE
+      , width = 12
+      , DT::dataTableOutput( outputId = "myDT", height = 600 )
+    ) # end of box 2
   ) # end of fluidRow2
-) # end of dashboard body
+  ) # end of dashboard body
 
 ## Shiny UI ##
 ui <- dashboardPage(
@@ -196,6 +187,27 @@ ui <- dashboardPage(
 # Define server logic
 server <- function(input, output, session) {
   
+  # create widget on the fly
+    output$yelpFly <- shiny::renderUI({
+      if( input$pizzeriaType != "All" ){
+      shiny::selectizeInput( inputId = "yelpRating"
+                             , label = shiny::h3( 
+                               paste0( "Which "
+                                       , input$pizzeriaType
+                                       , " has a better Yelp Rating?"
+                                       ) # make text dynamic
+                             ) # end of label
+                             , choices = c( "All"
+                                            , sort( unique( chicago.pizza$Yelp.Rating[
+                                              which( chicago.pizza$Pizzeria %in% input$pizzeriaType )
+                                              ] ) ) 
+                             )
+                             , selected = "All"
+      ) # end of Yelp Rating menu
+      }
+    })
+
+  
   # render leaflet output
   output$myMap <- leaflet::renderLeaflet({
     
@@ -205,32 +217,9 @@ server <- function(input, output, session) {
 
     
     # if 'All' is selected for 
-    # both input$pizzeriaType & input$
+    # both input$pizzeriaType & input$yelpRating
     # add all pizzerias onto map
-    if( input$pizzeriaType == "All" & input$deepDishType == "All" ){
-      
-      observe({
-        
-        # update pizzeriaType widget
-        updateSelectizeInput( session = session
-                              , inputId = "pizzeraType"
-                              , label = shiny::h3( "Select Your Favorite Pizzeria" )
-                              , choices = c( "All"
-                                             , sort( unique( chicago.pizza$Pizzeria ) )
-                              )
-        )
-        
-        # update deepDishType widget
-        updateSelectizeInput( session = session
-                              , inputId = "deepDishType"
-                              , label = "Select Your Favorite Type of Deep Dish"
-                              , choices = c( "All"
-                                             , sort( unique( chicago.pizza$Deep.Dish ) )
-                              )
-        )
-        
-        
-      })
+    if( input$pizzeriaType == "All" ){
       
       # make pizzeria marker
       pizzaIcon <- leaflet::makeIcon(
@@ -247,9 +236,9 @@ server <- function(input, output, session) {
       leaflet() %>%
         
         # set zoom level
-        setView( lng = -87.645814
-                 , lat = 41.865769
-                 , zoom = 10
+        setView( lng = -87.651304
+                 , lat = 41.921438
+                 , zoom = 11
         ) %>%
         
         # add background to map
@@ -258,7 +247,7 @@ server <- function(input, output, session) {
         # add zoom out button
         addEasyButton( easyButton(
           icon = "ion-android-globe", title = "Zoom Back Out"
-          , onClick = leaflet::JS("function(btn, map){ map.setZoom(10); }")
+          , onClick = leaflet::JS("function(btn, map){ map.setZoom(11); }")
         ) ) %>%
         
         # add markers
@@ -266,40 +255,13 @@ server <- function(input, output, session) {
                     , lat = chicago.pizza$Lat
                     , icon = pizzaIcon
                     )
-        
-      
-    } else if( input$pizzeriaType != "All" & input$deepDishType != "All"){
-      
-      # if 'All' is NOT selected for 
-      # input$pizzeriaType and input$deeDishType
-      # add filtered pizzerias onto map
-      
-      observe({
-        
-        # update pizzeriaType widget
-        updateSelectizeInput( session = session
-                              , inputId = "pizzeraType"
-                              , label = shiny::h3( "Select Your Favorite Pizzeria" )
-                              , choices = c( "All"
-                                             , sort( unique( chicago.pizza$Pizzeria ) )
-                              )
-        )
-
-        updateSelectizeInput( session = session
-                              , inputId = "deepDishType"
-                              , label = "Select Your Favorite Type of Deep Dish"
-                              , choices = sort( unique( chicago.pizza$Deep.Dish[ which( chicago.pizza$Pizzeria %in% input$pizzeriaType &
-                                                                                          chicago.pizza$Deep.Dish %in% input$deepDishType 
-                                                                                        ) ]
-                                                        ) )
-                              )
-      })
+    } else if( input$pizzeriaType != "All" & input$yelpRating == "All" ){
       
       # make pizzeria marker
       pizzaIcon <- leaflet::makeIcon(
-        iconUrl = ifelse( test = chicago.pizza$Pizzeria[ which( chicago.pizza$Pizzeria %in% input$pizzeriaType &
-                                                                  chicago.pizza$Deep.Dish %in% input$deepDishType 
-                                                                ) ] %in% "Giordano's Pizzeria"
+        iconUrl = ifelse( test = chicago.pizza$Pizzeria[
+          which( chicago.pizza$Pizzeria %in% input$pizzeriaType )
+        ] %in% "Giordano's Pizzeria"
                           , yes = "https://github.com/cenuno/shiny/raw/master/Images/Pizza_Logos/giordanos_logo.png"
                           , no = "https://github.com/cenuno/shiny/raw/master/Images/Pizza_Logos/lm_logo.png"
         )
@@ -312,9 +274,9 @@ server <- function(input, output, session) {
       leaflet() %>%
         
         # set zoom level
-        setView( lng = -87.645814
-                 , lat = 41.865769
-                 , zoom = 10
+        setView( lng = -87.651304
+                 , lat = 41.921438
+                 , zoom = 11
         ) %>%
         
         # add background to map
@@ -323,157 +285,155 @@ server <- function(input, output, session) {
         # add zoom out button
         addEasyButton( easyButton(
           icon = "ion-android-globe", title = "Zoom Back Out"
-          , onClick = leaflet::JS("function(btn, map){ map.setZoom(10); }")
+          , onClick = leaflet::JS("function(btn, map){ map.setZoom(11); }")
+        ) ) %>%
+        
+        # add markers
+        addMarkers( lng = chicago.pizza$Lon[ which( chicago.pizza$Pizzeria %in% input$pizzeriaType ) ]
+                    , lat = chicago.pizza$Lat[ which( chicago.pizza$Pizzeria %in% input$pizzeriaType ) ]
+                    , icon = pizzaIcon
+        )
+    } else{
+      
+      # make pizzeria marker
+      pizzaIcon <- leaflet::makeIcon(
+        iconUrl = ifelse( test = chicago.pizza$Pizzeria[
+          which( chicago.pizza$Pizzeria %in% input$pizzeriaType )
+          ] %in% "Giordano's Pizzeria"
+          , yes = "https://github.com/cenuno/shiny/raw/master/Images/Pizza_Logos/giordanos_logo.png"
+          , no = "https://github.com/cenuno/shiny/raw/master/Images/Pizza_Logos/lm_logo.png"
+        )
+        , iconWidth = 96
+        , iconHeight = 46
+        , iconAnchorX = 76
+        , iconAnchorY = 45
+      )
+      
+      leaflet() %>%
+        
+        # set zoom level
+        setView( lng = -87.651304
+                 , lat = 41.921438
+                 , zoom = 11
+        ) %>%
+        
+        # add background to map
+        addProviderTiles( providers$Hydda.Base ) %>%
+        
+        # add zoom out button
+        addEasyButton( easyButton(
+          icon = "ion-android-globe", title = "Zoom Back Out"
+          , onClick = leaflet::JS("function(btn, map){ map.setZoom(11); }")
         ) ) %>%
         
         # add markers
         addMarkers( lng = chicago.pizza$Lon[ which( chicago.pizza$Pizzeria %in% input$pizzeriaType &
-                                                      chicago.pizza$Deep.Dish %in% input$deepDishType 
+                                                      chicago.pizza$Yelp.Rating %in% input$yelpRating 
                                                     ) ]
                     , lat = chicago.pizza$Lat[ which( chicago.pizza$Pizzeria %in% input$pizzeriaType &
-                                                        chicago.pizza$Deep.Dish %in% input$deepDishType 
+                                                        chicago.pizza$Yelp.Rating %in% input$yelpRating
                                                       ) ]
                     , icon = pizzaIcon
         )
-      
-      
-    } else if( input$pizzeriaType == "All" & input$deepDishType != "All"){
-      
-      # if 'All' is selected for 
-      # input$pizzeriaType BUT NOT for input$deeDishType
-      # add filtered pizzerias onto map
-      
-      observe({
-        
-        # update pizzeriaType widget
-        updateSelectizeInput( session = session
-                              , inputId = "pizzeraType"
-                              , label = shiny::h3( "Select Your Favorite Pizzeria" )
-                              , choices = c( "All"
-                                             , sort( unique( chicago.pizza$Pizzeria ) )
-                              )
-        )
-        
-        updateSelectizeInput( session = session
-                              , inputId = "deepDishType"
-                              , label = "Select Your Favorite Type of Deep Dish"
-                              , choices = c( "All"
-                                             , sort( unique( chicago.pizza$Deep.Dish ))
-                              )
-        )
-      })
-      
-      
-      # make pizzeria marker
-      pizzaIcon <- leaflet::makeIcon(
-        iconUrl = ifelse( test = chicago.pizza$Pizzeria[ which( chicago.pizza$Deep.Dish %in% input$deepDishType ) ] %in% "Giordano's Pizzeria"
-                          , yes = "https://github.com/cenuno/shiny/raw/master/Images/Pizza_Logos/giordanos_logo.png"
-                          , no = "https://github.com/cenuno/shiny/raw/master/Images/Pizza_Logos/lm_logo.png"
-        )
-        , iconWidth = 96
-        , iconHeight = 46
-        , iconAnchorX = 76
-        , iconAnchorY = 45
-      )
-        
-        leaflet() %>%
-          
-          # set zoom level
-          setView( lng = -87.645814
-                   , lat = 41.865769
-                   , zoom = 10
-          ) %>%
-          
-          # add background to map
-          addProviderTiles( providers$Hydda.Base ) %>%
-          
-          # add zoom out button
-          addEasyButton( easyButton(
-            icon = "ion-android-globe", title = "Zoom Back Out"
-            , onClick = leaflet::JS("function(btn, map){ map.setZoom(10); }")
-          ) ) %>%
-          
-          # add markers
-          addMarkers( lng = chicago.pizza$Lon[ which( chicago.pizza$Deep.Dish %in% input$deepDishType ) ]
-                      , lat = chicago.pizza$Lat[ which( chicago.pizza$Deep.Dish %in% input$deepDishType ) ]
-                      , icon = pizzaIcon
-          )
-        
-      
-    } else if( input$pizzeriaType != "All" & input$deepDishType == "All"){
-      
-      # if 'All' is selected for 
-      # input$deepDishType BUT NOT for input$pizzeriaType
-      # add filtered pizzas onto map
-      
-      observe({
-        
-        updateSelectizeInput( session = session
-                              , inputId = "deepDishType"
-                              , label = "Select Your Favorite Type of Deep Dish"
-                              , choices = sort( unique( chicago.pizza$Deep.Dish[ which( chicago.pizza$Pizzeria %in% input$pizzeriaType
-                                                                                        ) ]
-                                                        ) )
-        )
-      })
-      
-      
-      # make pizzeria marker
-      pizzaIcon <- leaflet::makeIcon(
-        iconUrl = ifelse( test = chicago.pizza$Pizzeria[ which( chicago.pizza$Deep.Dish %in% input$deepDishType ) ] %in% "Giordano's Pizzeria"
-                          , yes = "https://github.com/cenuno/shiny/raw/master/Images/Pizza_Logos/giordanos_logo.png"
-                          , no = "https://github.com/cenuno/shiny/raw/master/Images/Pizza_Logos/lm_logo.png"
-        )
-        , iconWidth = 96
-        , iconHeight = 46
-        , iconAnchorX = 76
-        , iconAnchorY = 45
-      )
-      
-      leaflet() %>%
-        
-        # set zoom level
-        setView( lng = -87.645814
-                 , lat = 41.865769
-                 , zoom = 10
-        ) %>%
-        
-        # add background to map
-        addProviderTiles( providers$Hydda.Base ) %>%
-        
-        # add zoom out button
-        addEasyButton( easyButton(
-          icon = "ion-android-globe", title = "Zoom Back Out"
-          , onClick = leaflet::JS("function(btn, map){ map.setZoom(10); }")
-        ) ) %>%
-        
-        # add markers
-        addMarkers( lng = chicago.pizza$Lon[ which( chicago.pizza$Deep.Dish %in% input$deepDishType ) ]
-                    , lat = chicago.pizza$Lat[ which( chicago.pizza$Deep.Dish %in% input$deepDishType ) ]
-                    , icon = pizzaIcon
-        )
-      
-      
-    } # end of else statement
-    
+    } # end of if else statements
     }) # end of render leaflet
   
+  
+  # make DT
   output$myDT <- DT::renderDataTable({
     
-    # if 'All' is selected for 
-    # both input$pizzeriaType & input$
-    # add all pizzerias onto map
-    if( input$pizzeriaType == "All" & input$deepDishType == "All" ){
+    # if pizzeriaType is All
+    if( input$pizzeriaType == "All" ){
+      DT::datatable( data = chicago.pizza
+                     , extensions = 'Buttons'
+                     , options = list( 
+                       autoWidth = TRUE
+                       , dom = "Blfrtip"
+                       , buttons = list( 
+                         "copy"
+                         , list( extend = "collection"
+                                 , buttons = c( "csv"
+                                                , "excel"
+                                                , "pdf"
+                                 )
+                                 , text = "Download"
+                         ) # end of download button
+                       ) # end of buttons customization
+                       
+                       # customize the length menu
+                       , lengthMenu = list( c(5, 100, -1) # declare values
+                                            , c(5, 100, "All") # declare titles
+                       ) # end of lengthMenu customization
+                       
+                       # enable horizontal scrolling due to many columns
+                       , scrollX = TRUE
+                       
+                     ) # end of options
+                     ) # end of DT creation
       
-      datatable( data = chicago.pizza )
+    } else if( input$pizzeriaType != "All" & input$yelpRating == "All" ){
+      DT::datatable( data = chicago.pizza[
+        which( chicago.pizza$Pizzeria %in% input$pizzeriaType ) 
+        , ]
+        , extensions = 'Buttons'
+        , options = list( 
+          autoWidth = TRUE
+          , dom = "Blfrtip"
+          , buttons = list( 
+            "copy"
+            , list( extend = "collection"
+                    , buttons = c( "csv"
+                                   , "excel"
+                                   , "pdf"
+                    )
+                    , text = "Download"
+            ) # end of download button
+          ) # end of buttons customization
+          
+          # customize the length menu
+          , lengthMenu = list( c(5, 100, -1) # declare values
+                               , c(5, 100, "All") # declare titles
+          ) # end of lengthMenu customization
+          
+          # enable horizontal scrolling due to many columns
+          , scrollX = TRUE
+          
+        ) # end of options
+        ) # end of DT creation
     } else{
-      datatable( data = chicago.pizza[ which( chicago.pizza$Pizzeria %in% input$pizzeriaType &
-                                                chicago.pizza$Deep.Dish %in% input$deepDishType 
-                                              ) , ]
-                 )
-    } # end of else statement
-    
+      DT::datatable( data = chicago.pizza[
+        which( chicago.pizza$Pizzeria %in% input$pizzeriaType &
+                 chicago.pizza$Yelp.Rating %in% input$yelpRating 
+               ) 
+        , ] 
+        , extensions = 'Buttons'
+        , options = list( 
+          autoWidth = TRUE
+          , dom = "Blfrtip"
+          , buttons = list( 
+            "copy"
+            , list( extend = "collection"
+                    , buttons = c( "csv"
+                                   , "excel"
+                                   , "pdf"
+                    )
+                    , text = "Download"
+            ) # end of download button
+          ) # end of buttons customization
+          
+          # customize the length menu
+          , lengthMenu = list( c(5, 100, -1) # declare values
+                               , c(5, 100, "All") # declare titles
+          ) # end of lengthMenu customization
+          
+          # enable horizontal scrolling due to many columns
+          , scrollX = TRUE
+          
+        ) # end of options
+        ) # end of DT creation
+    } # end of if else statements
   }) # end of render DT
+        
   
 } # end of server
 
