@@ -15,6 +15,7 @@ library( htmlwidgets )        # HTML Widgets for R
 library( dplyr )              # A Grammar of Data Manipulation
 library( magrittr )           # Ceci n'est pas une pipe
 library( DT )                 # A Wrapper of the JavaScript Library 'DataTables'
+library( mapview )            # Interactive Viewing of Spatial Data in R
 
 ##############################
 ## Create Reproducible Data ##
@@ -155,6 +156,11 @@ body <- dashboardBody(
            
            # create placeholder for second widget
            , shiny::uiOutput( outputId = "yelpFly" )
+           
+           # create placeholder for export leaflet map widget
+           , shiny::downloadButton( outputId = "downloadMap"
+                                    , "Download Map"
+                                    )
            
          ) # end of first column
          
