@@ -25,7 +25,7 @@ install.packages( c( "shiny"              # Web Application Framework for R
 library( shiny )
 
 # call Shiny app from GitHub
-shiny::runURL( url = "https://github.com/cenuno/shiny/archive/master.zip"
+shiny::runUrl( url = "https://github.com/cenuno/shiny/archive/master.zip"
                  , subdir = "Interactive_UI"
                )
 
