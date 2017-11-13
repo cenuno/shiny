@@ -152,15 +152,16 @@ body <- dashboardBody(
                                                   , sort( unique( chicago.pizza$Pizzeria ) ) 
                                     )
                                     , selected = "All"
+                                    #, multiple = TRUE
            ) # end of drop down pizerriaType menu
            
            # create placeholder for second widget
            , shiny::uiOutput( outputId = "yelpFly" )
            
            # create placeholder for export leaflet map widget
-           , shiny::downloadButton( outputId = "downloadMap"
-                                    , "Download Map"
-                                    )
+           # , shiny::downloadButton( outputId = "downloadMap"
+           #                          , "Download Map"
+           #                          )
            
          ) # end of first column
          
@@ -178,7 +179,7 @@ body <- dashboardBody(
       , solidHeader = TRUE
       , collapsible = FALSE
       , width = 12
-      , DT::dataTableOutput( outputId = "myDT", height = 600 )
+      , DT::dataTableOutput( outputId = "myDT" )
     ) # end of box 2
   ) # end of fluidRow2
   ) # end of dashboard body
@@ -192,6 +193,39 @@ ui <- dashboardPage(
 
 # Define server logic
 server <- function(input, output, session) {
+  
+  # create reactive data frame
+  datasetInput <- reactive({
+    # if 'All' is selected for 
+    # input$pizzeriaType
+    # add all pizzerias onto map
+    # by keeping the original data frame intact
+    if( input$pizzeriaType != "All" ){
+      chicago.pizza 
+      
+      
+      # if 'All' is  NOT selected for 
+      # input$pizzeriaType but 
+      # 'All" is selected for input$yelpRating
+      # filter original data frame
+      # to only include certain pizzerias
+    } else if( input$pizzeriaType != "All" & input$yelpRating == "All" ){
+      chicago.pizza <- chicago.pizza[ which(
+        chicago.pizza$Pizzeria %in% input$pizzeriaType
+      ) , ]
+      
+      # if 'All' is  NOT selected for both
+      # input$pizzeriaType and input$yelpRating
+      # filter original data frame
+      # to only include certain pizzerias
+    } else{
+      chicago.pizza <- chicago.pizza[ which(
+        chicago.pizza$Pizzeria %in% input$pizzeriaType &
+          chicago.pizza$Yelp.Rating %in% input$yelpRating
+      ) , ]
+    } # end of if else statement
+  })
+  
   
   # create widget on the fly
     output$yelpFly <- shiny::renderUI({
@@ -209,21 +243,19 @@ server <- function(input, output, session) {
                                               ] ) ) 
                              )
                              , selected = "All"
+                             # , multiple = TRUE
       ) # end of Yelp Rating menu
       }
     })
-
-  
+    
+    # make north compass icon
+    northArrowIcon <- "<img src='http://ian.umces.edu/imagelibrary/albums/userpics/10002/normal_ian-symbol-north-arrow-2.png' style='width:40px;height:60px;'>"
+     
   # render leaflet output
   output$myMap <- leaflet::renderLeaflet({
-    
-    # keep watch to let UI
-    # know when to update the list of deep dish types
-    
 
-    
     # if 'All' is selected for 
-    # both input$pizzeriaType & input$yelpRating
+    # both input$pizzeriaType
     # add all pizzerias onto map
     if( input$pizzeriaType == "All" ){
       
@@ -239,6 +271,17 @@ server <- function(input, output, session) {
         , iconAnchorY = 45
       )
       
+      # make custom map title
+      mapTitle <- paste0( 
+        "<p style='color:#ed7b46; font-size:15px;'>"
+        , "Exploring "
+        , paste( unique( chicago.pizza$Pizzeria ) 
+                 , collapse = " & "
+                 )
+        , ", 2017"
+        , "</p>"
+        )
+      
       leaflet() %>%
         
         # set zoom level
@@ -248,7 +291,8 @@ server <- function(input, output, session) {
         ) %>%
         
         # add background to map
-        addProviderTiles( providers$Hydda.Base ) %>%
+        # addProviderTiles( providers$Hydda.Base ) %>%
+        addTiles( urlTemplate = "https://{s}.tile.openstreetmap.se/hydda/full/{z}/{x}/{y}.png" ) %>%
         
         # add zoom out button
         addEasyButton( easyButton(
@@ -256,11 +300,22 @@ server <- function(input, output, session) {
           , onClick = leaflet::JS("function(btn, map){ map.setZoom(11); }")
         ) ) %>%
         
-        # add markers
+        # add pizza markers
         addMarkers( lng = chicago.pizza$Lon
                     , lat = chicago.pizza$Lat
                     , icon = pizzaIcon
+                    ) %>%
+        
+        # add north arrow marker
+        addControl( html = northArrowIcon
+                    , position = "bottomright"
+                    ) %>%
+        
+        # add custom title
+        addControl( html = mapTitle
+                    , position = "topright"
                     )
+      
     } else if( input$pizzeriaType != "All" & input$yelpRating == "All" ){
       
       # make pizzeria marker
@@ -277,6 +332,17 @@ server <- function(input, output, session) {
         , iconAnchorY = 45
       )
       
+      # make custom map title
+      mapTitle <- paste0( 
+        "<p style='color:#ed7b46; font-size:15px;'>"
+        , "Exploring "
+        , unique( chicago.pizza$Pizzeria[ 
+          which( chicago.pizza$Pizzeria %in% input$pizzeriaType )
+          ] )
+        , ", 2017"
+        , "</p>"
+      )
+      
       leaflet() %>%
         
         # set zoom level
@@ -286,7 +352,8 @@ server <- function(input, output, session) {
         ) %>%
         
         # add background to map
-        addProviderTiles( providers$Hydda.Base ) %>%
+        # addProviderTiles( providers$Hydda.Base ) %>%
+        addTiles( urlTemplate = "https://{s}.tile.openstreetmap.se/hydda/full/{z}/{x}/{y}.png" ) %>%
         
         # add zoom out button
         addEasyButton( easyButton(
@@ -298,7 +365,18 @@ server <- function(input, output, session) {
         addMarkers( lng = chicago.pizza$Lon[ which( chicago.pizza$Pizzeria %in% input$pizzeriaType ) ]
                     , lat = chicago.pizza$Lat[ which( chicago.pizza$Pizzeria %in% input$pizzeriaType ) ]
                     , icon = pizzaIcon
+                    ) %>%
+        
+        # add north arrow marker
+        addControl( html = northArrowIcon
+                    , position = "bottomright"
+                    ) %>%
+        
+        # add custom title
+        addControl( html = mapTitle
+                    , position = "topright"
         )
+      
     } else{
       
       # make pizzeria marker
@@ -315,6 +393,19 @@ server <- function(input, output, session) {
         , iconAnchorY = 45
       )
       
+      # make custom map title
+      mapTitle <- paste0( 
+        "<p style='color:#ed7b46; font-size:15px;'>"
+        , "Exploring "
+        , unique( chicago.pizza$Pizzeria[ 
+          which( chicago.pizza$Pizzeria %in% input$pizzeriaType &
+                   chicago.pizza$Yelp.Rating %in% input$yelpRating
+                 )
+          ] )
+        , ", 2017"
+        , "</p>"
+      )
+      
       leaflet() %>%
         
         # set zoom level
@@ -324,7 +415,8 @@ server <- function(input, output, session) {
         ) %>%
         
         # add background to map
-        addProviderTiles( providers$Hydda.Base ) %>%
+        # addProviderTiles( providers$Hydda.Base ) %>%
+        addTiles( urlTemplate = "https://{s}.tile.openstreetmap.se/hydda/full/{z}/{x}/{y}.png" ) %>%
         
         # add zoom out button
         addEasyButton( easyButton(
@@ -340,7 +432,18 @@ server <- function(input, output, session) {
                                                         chicago.pizza$Yelp.Rating %in% input$yelpRating
                                                       ) ]
                     , icon = pizzaIcon
+                    ) %>%
+        
+        # add north arrow marker
+        addControl( html = northArrowIcon
+                    , position = "bottomright"
+        ) %>%
+        
+        # add custom title
+        addControl( html = mapTitle
+                    , position = "topright"
         )
+      
     } # end of if else statements
     }) # end of render leaflet
   
