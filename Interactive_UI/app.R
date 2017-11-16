@@ -1,7 +1,7 @@
 #
 # Author:   Cristian E. Nuno
 # Purpose:  Reproducible Example of Interactive UI for a Shiny App
-# Date:     November 11, 2017
+# Date:     November 15, 2017
 #
 
 ###############################
@@ -169,6 +169,9 @@ body <- dashboardBody(
          , column(
            width = 10
            , leaflet::leafletOutput( outputId = "myMap", height = 600 )
+           
+           # add a placeholder for the map to change dynamically
+           , shiny::plotOutput( "dynamicMap")
          ) # end of second column
     ) # end of box 1
   ) # end of fluidRow1
@@ -248,205 +251,203 @@ server <- function(input, output, session) {
       }
     })
     
-    # make north compass icon
-    northArrowIcon <- "<img src='http://ian.umces.edu/imagelibrary/albums/userpics/10002/normal_ian-symbol-north-arrow-2.png' style='width:40px;height:60px;'>"
-     
+
   # render leaflet output
   output$myMap <- leaflet::renderLeaflet({
+    
+    leaflet( data = "myMap" ) %>%
+            # set zoom level
+            setView( lng = -87.651304
+                     , lat = 41.921438
+                     , zoom = 11
+            ) %>%
 
-    # if 'All' is selected for 
-    # both input$pizzeriaType
-    # add all pizzerias onto map
-    if( input$pizzeriaType == "All" ){
+            # add background to map
+            # addProviderTiles( providers$Hydda.Base ) %>%
+            addTiles( urlTemplate = "https://{s}.tile.openstreetmap.se/hydda/full/{z}/{x}/{y}.png" ) %>%
+
+            # add zoom out button
+            addEasyButton( easyButton(
+              icon = "ion-android-globe", title = "Zoom Back Out"
+              , onClick = leaflet::JS("function(btn, map){ map.setZoom(11); }")
+            ) ) 
       
-      # make pizzeria marker
-      pizzaIcon <- leaflet::makeIcon(
-        iconUrl = ifelse( test = chicago.pizza$Pizzeria %in% "Giordano's Pizzeria"
-                          , yes = "https://github.com/cenuno/shiny/raw/master/Images/Pizza_Logos/giordanos_logo.png"
-                          , no = "https://github.com/cenuno/shiny/raw/master/Images/Pizza_Logos/lm_logo.png"
-        )
-        , iconWidth = 96
-        , iconHeight = 46
-        , iconAnchorX = 76
-        , iconAnchorY = 45
-      )
-      
-      # make custom map title
-      mapTitle <- paste0( 
-        "<p style='color:#ed7b46; font-size:15px;'>"
-        , "Exploring "
-        , paste( unique( chicago.pizza$Pizzeria ) 
-                 , collapse = " & "
-                 )
-        , ", 2017"
-        , "</p>"
-        )
-      
-      leaflet() %>%
-        
-        # set zoom level
-        setView( lng = -87.651304
-                 , lat = 41.921438
-                 , zoom = 11
-        ) %>%
-        
-        # add background to map
-        # addProviderTiles( providers$Hydda.Base ) %>%
-        addTiles( urlTemplate = "https://{s}.tile.openstreetmap.se/hydda/full/{z}/{x}/{y}.png" ) %>%
-        
-        # add zoom out button
-        addEasyButton( easyButton(
-          icon = "ion-android-globe", title = "Zoom Back Out"
-          , onClick = leaflet::JS("function(btn, map){ map.setZoom(11); }")
-        ) ) %>%
-        
-        # add pizza markers
-        addMarkers( lng = chicago.pizza$Lon
-                    , lat = chicago.pizza$Lat
-                    , icon = pizzaIcon
-                    ) %>%
-        
-        # add north arrow marker
-        addControl( html = northArrowIcon
-                    , position = "bottomright"
-                    ) %>%
-        
-        # add custom title
-        addControl( html = mapTitle
-                    , position = "topright"
-                    )
-      
-    } else if( input$pizzeriaType != "All" & input$yelpRating == "All" ){
-      
-      # make pizzeria marker
-      pizzaIcon <- leaflet::makeIcon(
-        iconUrl = ifelse( test = chicago.pizza$Pizzeria[
-          which( chicago.pizza$Pizzeria %in% input$pizzeriaType )
-        ] %in% "Giordano's Pizzeria"
-                          , yes = "https://github.com/cenuno/shiny/raw/master/Images/Pizza_Logos/giordanos_logo.png"
-                          , no = "https://github.com/cenuno/shiny/raw/master/Images/Pizza_Logos/lm_logo.png"
-        )
-        , iconWidth = 96
-        , iconHeight = 46
-        , iconAnchorX = 76
-        , iconAnchorY = 45
-      )
-      
-      # make custom map title
-      mapTitle <- paste0( 
-        "<p style='color:#ed7b46; font-size:15px;'>"
-        , "Exploring "
-        , unique( chicago.pizza$Pizzeria[ 
-          which( chicago.pizza$Pizzeria %in% input$pizzeriaType )
-          ] )
-        , ", 2017"
-        , "</p>"
-      )
-      
-      leaflet() %>%
-        
-        # set zoom level
-        setView( lng = -87.651304
-                 , lat = 41.921438
-                 , zoom = 11
-        ) %>%
-        
-        # add background to map
-        # addProviderTiles( providers$Hydda.Base ) %>%
-        addTiles( urlTemplate = "https://{s}.tile.openstreetmap.se/hydda/full/{z}/{x}/{y}.png" ) %>%
-        
-        # add zoom out button
-        addEasyButton( easyButton(
-          icon = "ion-android-globe", title = "Zoom Back Out"
-          , onClick = leaflet::JS("function(btn, map){ map.setZoom(11); }")
-        ) ) %>%
-        
-        # add markers
-        addMarkers( lng = chicago.pizza$Lon[ which( chicago.pizza$Pizzeria %in% input$pizzeriaType ) ]
-                    , lat = chicago.pizza$Lat[ which( chicago.pizza$Pizzeria %in% input$pizzeriaType ) ]
-                    , icon = pizzaIcon
-                    ) %>%
-        
-        # add north arrow marker
-        addControl( html = northArrowIcon
-                    , position = "bottomright"
-                    ) %>%
-        
-        # add custom title
-        addControl( html = mapTitle
-                    , position = "topright"
-        )
-      
-    } else{
-      
-      # make pizzeria marker
-      pizzaIcon <- leaflet::makeIcon(
-        iconUrl = ifelse( test = chicago.pizza$Pizzeria[
-          which( chicago.pizza$Pizzeria %in% input$pizzeriaType )
-          ] %in% "Giordano's Pizzeria"
-          , yes = "https://github.com/cenuno/shiny/raw/master/Images/Pizza_Logos/giordanos_logo.png"
-          , no = "https://github.com/cenuno/shiny/raw/master/Images/Pizza_Logos/lm_logo.png"
-        )
-        , iconWidth = 96
-        , iconHeight = 46
-        , iconAnchorX = 76
-        , iconAnchorY = 45
-      )
-      
-      # make custom map title
-      mapTitle <- paste0( 
-        "<p style='color:#ed7b46; font-size:15px;'>"
-        , "Exploring "
-        , unique( chicago.pizza$Pizzeria[ 
-          which( chicago.pizza$Pizzeria %in% input$pizzeriaType &
-                   chicago.pizza$Yelp.Rating %in% input$yelpRating
-                 )
-          ] )
-        , ", 2017"
-        , "</p>"
-      )
-      
-      leaflet() %>%
-        
-        # set zoom level
-        setView( lng = -87.651304
-                 , lat = 41.921438
-                 , zoom = 11
-        ) %>%
-        
-        # add background to map
-        # addProviderTiles( providers$Hydda.Base ) %>%
-        addTiles( urlTemplate = "https://{s}.tile.openstreetmap.se/hydda/full/{z}/{x}/{y}.png" ) %>%
-        
-        # add zoom out button
-        addEasyButton( easyButton(
-          icon = "ion-android-globe", title = "Zoom Back Out"
-          , onClick = leaflet::JS("function(btn, map){ map.setZoom(11); }")
-        ) ) %>%
-        
-        # add markers
-        addMarkers( lng = chicago.pizza$Lon[ which( chicago.pizza$Pizzeria %in% input$pizzeriaType &
-                                                      chicago.pizza$Yelp.Rating %in% input$yelpRating 
-                                                    ) ]
-                    , lat = chicago.pizza$Lat[ which( chicago.pizza$Pizzeria %in% input$pizzeriaType &
-                                                        chicago.pizza$Yelp.Rating %in% input$yelpRating
-                                                      ) ]
-                    , icon = pizzaIcon
-                    ) %>%
-        
-        # add north arrow marker
-        addControl( html = northArrowIcon
-                    , position = "bottomright"
-        ) %>%
-        
-        # add custom title
-        addControl( html = mapTitle
-                    , position = "topright"
-        )
-      
-    } # end of if else statements
-    }) # end of render leaflet
+  }) # end of render leaflet
   
+  # create dynamic parts of map
+  output$dynamicMap <- shiny::renderPlot({
+    
+    # make north compass icon
+    northArrowIcon <- "<img src='http://ian.umces.edu/imagelibrary/albums/userpics/10002/normal_ian-symbol-north-arrow-2.png' style='width:40px;height:60px;'>"
+    
+    
+        # if 'All' is selected for
+        # both input$pizzeriaType
+        # add all pizzerias onto map
+        if( input$pizzeriaType == "All" ){
+
+          # make pizzeria marker
+          pizzaIcon <- leaflet::makeIcon(
+            iconUrl = ifelse( test = chicago.pizza$Pizzeria %in% "Giordano's Pizzeria"
+                              , yes = "https://github.com/cenuno/shiny/raw/master/Images/Pizza_Logos/giordanos_logo.png"
+                              , no = "https://github.com/cenuno/shiny/raw/master/Images/Pizza_Logos/lm_logo.png"
+            )
+            , iconWidth = 96
+            , iconHeight = 46
+            , iconAnchorX = 76
+            , iconAnchorY = 45
+          )
+
+          # make custom map title
+          mapTitle <- paste0(
+            "<p style='color:#ed7b46; font-size:15px;'>"
+            , "Exploring "
+            , paste( unique( chicago.pizza$Pizzeria )
+                     , collapse = " & "
+                     )
+            , ", 2017"
+            , "</p>"
+            )
+    
+    # call the baseline leaflet map
+    leaflet::leafletProxy( mapId = "myMap" ) %>%
+      
+      # clear all background markers
+      clearControls() %>%
+      
+      # clear all markers
+      clearMarkers() %>%
+      
+      # add pizza markers
+      addMarkers( lng = chicago.pizza$Lon
+                  , lat = chicago.pizza$Lat
+                  , icon = pizzaIcon
+                  ) %>%
+      
+      # add custom title
+      addControl( html = mapTitle
+                  , position = "topright"
+      ) %>%
+      
+      # add north arrow marker
+      addControl( html = northArrowIcon
+                  , position = "bottomright"
+      )
+
+        } else if( input$pizzeriaType != "All" & input$yelpRating == "All" ){
+
+          # make pizzeria marker
+          pizzaIcon <- leaflet::makeIcon(
+            iconUrl = ifelse( test = chicago.pizza$Pizzeria[
+              which( chicago.pizza$Pizzeria %in% input$pizzeriaType )
+            ] %in% "Giordano's Pizzeria"
+                              , yes = "https://github.com/cenuno/shiny/raw/master/Images/Pizza_Logos/giordanos_logo.png"
+                              , no = "https://github.com/cenuno/shiny/raw/master/Images/Pizza_Logos/lm_logo.png"
+            )
+            , iconWidth = 96
+            , iconHeight = 46
+            , iconAnchorX = 76
+            , iconAnchorY = 45
+          )
+
+          # make custom map title
+          mapTitle <- paste0(
+            "<p style='color:#ed7b46; font-size:15px;'>"
+            , "Exploring "
+            , unique( chicago.pizza$Pizzeria[
+              which( chicago.pizza$Pizzeria %in% input$pizzeriaType )
+              ] )
+            , ", 2017"
+            , "</p>"
+          )
+          
+          # call the baseline leaflet map
+          leaflet::leafletProxy( mapId = "myMap" ) %>%
+            
+            # clear all background markers
+            clearControls() %>%
+            
+            # clear all markers
+            clearMarkers() %>%
+            
+            # add pizza markers
+            addMarkers( lng = chicago.pizza$Lon[ which( chicago.pizza$Pizzeria %in% input$pizzeriaType ) ]
+                        , lat = chicago.pizza$Lat[ which( chicago.pizza$Pizzeria %in% input$pizzeriaType ) ]
+                        , icon = pizzaIcon
+            ) %>%
+            
+            # add custom title
+            addControl( html = mapTitle
+                        , position = "topright"
+            ) %>%
+            
+            # add north arrow marker
+            addControl( html = northArrowIcon
+                        , position = "bottomright"
+            )
+          
+          } else{
+
+                # make pizzeria marker
+                pizzaIcon <- leaflet::makeIcon(
+                  iconUrl = ifelse( test = chicago.pizza$Pizzeria[
+                    which( chicago.pizza$Pizzeria %in% input$pizzeriaType )
+                    ] %in% "Giordano's Pizzeria"
+                    , yes = "https://github.com/cenuno/shiny/raw/master/Images/Pizza_Logos/giordanos_logo.png"
+                    , no = "https://github.com/cenuno/shiny/raw/master/Images/Pizza_Logos/lm_logo.png"
+                  )
+                  , iconWidth = 96
+                  , iconHeight = 46
+                  , iconAnchorX = 76
+                  , iconAnchorY = 45
+                )
+
+                # make custom map title
+                mapTitle <- paste0(
+                  "<p style='color:#ed7b46; font-size:15px;'>"
+                  , "Exploring "
+                  , unique( chicago.pizza$Pizzeria[
+                    which( chicago.pizza$Pizzeria %in% input$pizzeriaType &
+                             chicago.pizza$Yelp.Rating %in% input$yelpRating
+                           )
+                    ] )
+                  , ", 2017"
+                  , "</p>"
+                )
+                
+                # call the baseline leaflet map
+                leaflet::leafletProxy( mapId = "myMap" ) %>%
+                  
+                  # clear all background markers
+                  clearControls() %>%
+                  
+                  # clear all markers
+                  clearMarkers() %>%
+                  
+                  # add markers
+                  addMarkers( lng = chicago.pizza$Lon[ which( chicago.pizza$Pizzeria %in% input$pizzeriaType &
+                                                                chicago.pizza$Yelp.Rating %in% input$yelpRating
+                  ) ]
+                  , lat = chicago.pizza$Lat[ which( chicago.pizza$Pizzeria %in% input$pizzeriaType &
+                                                      chicago.pizza$Yelp.Rating %in% input$yelpRating
+                  ) ]
+                  , icon = pizzaIcon
+                  ) %>%
+                  
+                  # add custom title
+                  addControl( html = mapTitle
+                              , position = "topright"
+                  ) %>%
+                  
+                  # add north arrow marker
+                  addControl( html = northArrowIcon
+                              , position = "bottomright"
+                  )
+                  
+          } # end of if else statements
+    
+  }) # end of dynamicMap
+
   
   # make DT
   output$myDT <- DT::renderDataTable({
