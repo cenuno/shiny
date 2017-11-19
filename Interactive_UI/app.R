@@ -16,7 +16,7 @@ library( dplyr )              # A Grammar of Data Manipulation
 library( magrittr )           # Ceci n'est pas une pipe
 library( DT )                 # A Wrapper of the JavaScript Library 'DataTables'
 library( mapview )            # Interactive Viewing of Spatial Data in R
-
+library( webshot )            # Take a screenshot of a URL
 ##############################
 ## Create Reproducible Data ##
 ##############################
@@ -77,18 +77,18 @@ chicago.pizza <- data.frame( Pizzeria = c( rep( x = "Giordano's Pizzeria"
                                         , 41.876448
                                         , 41.890344
                                         , 42.051465
-                                        , 41.9010214
+                                        , 41.903763
                                         , 41.8662688
-                                        , 41.8910349
+                                        , 41.891038
                                         , 41.875234
                                         )
                              , Lon = c( -87.590199
                                         , -87.647936
                                         , -87.633743
                                         , -87.682001
-                                        , -87.6503791
+                                        , -87.633175
                                         , -87.6578169
-                                        , -87.6506138
+                                        , -87.633104
                                         , -87.628985
                                         )
                              , Community_Area = c( "Hyde Park"
@@ -130,37 +130,6 @@ chicago.pizza <- data.frame( Pizzeria = c( rep( x = "Giordano's Pizzeria"
                                                 , 3.5
                                                 , 3.5
                                                 )
-                             # , logoIcon = as.list( icons(  leaflet::makeIcon( iconUrl = "https://giordanos.com/content/uploads/logo-red.png"
-                             #                                         , iconWidth = 96
-                             #                                         , iconHeight = 46
-                             #                                         , iconAnchorX = 76
-                             #                                         , iconAnchorY = 45
-                             # )
-                             # , leaflet::makeIcon( iconUrl = "https://giordanos.com/content/uploads/logo-red.png"
-                             #                      , iconWidth = 96
-                             #                      , iconHeight = 46
-                             #                      , iconAnchorX = 76
-                             #                      , iconAnchorY = 45
-                             # )
-                             # , leaflet::makeIcon( iconUrl = "https://www.loumalnatis.com/resources/assets/images/logo2x.png"
-                             #                      , iconWidth = 96
-                             #                      , iconHeight = 46
-                             #                      , iconAnchorX = 76
-                             #                      , iconAnchorY = 45
-                             # )
-                             # , leaflet::makeIcon( iconUrl = "http://diylogodesigns.com/blog/wp-content/uploads/2017/08/Dominos-Pizza-icon-logo-vector-png.png"
-                             #                      , iconWidth = 96
-                             #                      , iconHeight = 46
-                             #                      , iconAnchorX = 76
-                             #                      , iconAnchorY = 45
-                             # )
-                             # , leaflet::makeIcon( iconUrl = "http://molisepr.com/blog/wp-content/uploads/2015/06/Ginos-East.jpg"
-                             #                      , iconWidth = 96
-                             #                      , iconHeight = 46
-                             #                      , iconAnchorX = 76
-                             #                      , iconAnchorY = 45
-                             # )
-                             # ) )
                              , stringsAsFactors = FALSE
                              ) # done creating chicago.pizza data frame
 # check dim
@@ -170,6 +139,63 @@ dim( chicago.pizza ) # [1] 8 10
 colnames( chicago.pizza )
 # [1] "Pizzeria"       "Website"        "Phone"          "Full.Address"   "Lat"           
 # [6] "Lon"            "Community_Area" "Description"    "Deep.Dish"      "Yelp.Rating"  
+
+# import City of Chicago current community area boundaries
+comarea606 <- readRDS( gzcon( url( "https://github.com/cenuno/shiny/raw/master/cps_locator/Data/raw-data/comarea606_raw.RDS" ) ) )
+
+# create pizzaIcon
+# Courtesy of Oleksiy, on SO, from September 20, 2017
+# https://stackoverflow.com/questions/46286599/custom-markers-on-shiny-leaflet-map
+pizzaIcon <- leaflet::iconList(
+  gpIcon = leaflet::makeIcon(
+    iconUrl = "https://giordanos.com/content/uploads/logo-red.png"
+    , iconWidth = 96
+    , iconHeight = 46
+    , iconAnchorX = 76
+    , iconAnchorY = 45
+  )
+  , lmIcon = leaflet::makeIcon(
+    iconUrl = "https://www.loumalnatis.com/resources/assets/images/logo2x.png"
+    , iconWidth = 96
+    , iconHeight = 46
+    , iconAnchorX = 76
+    , iconAnchorY = 45
+  )
+  , dpIcon = leaflet::makeIcon(
+    iconUrl = "http://diylogodesigns.com/blog/wp-content/uploads/2017/08/Dominos-Pizza-icon-logo-vector-png.png"
+    , iconWidth = 66
+    , iconHeight = 96
+  )
+  , geIcon = leaflet::makeIcon(
+    iconUrl = "http://molisepr.com/blog/wp-content/uploads/2015/06/Ginos-East.jpg"
+    , iconWidth = 96
+    , iconHeight = 46
+    , iconAnchorX = 76
+    , iconAnchorY = 45
+  )
+) # end of iconList
+
+# make icon data frame
+chicago.pizza <- chicago.pizza %>%
+  mutate( iconType = c( "gpIcon"
+                        , "gpIcon"
+                        , "lmIcon"
+                        , "lmIcon"
+                        , "dpIcon"
+                        , "dpIcon"
+                        , "geIcon"
+                        , "geIcon"
+                        )
+          )
+# check dim
+dim( chicago.pizza ) # [1]  8 11
+
+# check colnames
+colnames( chicago.pizza ) 
+# [1] "Pizzeria"       "Website"        "Phone"          "Full.Address"  
+# [5] "Lat"            "Lon"            "Community_Area" "Description"   
+# [9] "Deep.Dish"      "Yelp.Rating"    "iconType"   
+
 
 ###################################
 ## build a basic shiny dashboard ##
@@ -240,10 +266,10 @@ body <- dashboardBody(
            , shiny::uiOutput( outputId = "yelpFly" )
            
            # create placeholder for export leaflet map widget
-           # , shiny::downloadButton( outputId = "downloadMap"
-           #                          , "Download Map"
-           #                          )
-           
+           , shiny::downloadButton( outputId = "download_Map"
+                                  , label = "Download Map"
+                                  )
+
          ) # end of first column
          
          # create placeholder for leaflet map
@@ -254,9 +280,9 @@ body <- dashboardBody(
                                      )
            
            # add a placeholder for the map to change dynamically
-           , shiny::plotOutput( outputId = "dynamicMap"
-                                , height = 3
-                                )
+           # , shiny::plotOutput( outputId = "dynamicMap"
+           #                      , height = 3
+           #                      )
          ) # end of second column
     ) # end of box 1
   ) # end of fluidRow1
@@ -281,7 +307,6 @@ ui <- dashboardPage(
 
 # Define server logic
 server <- function(input, output, session) {
-  
   
   # create reactive data frame
   datasetInput <- reactive({
@@ -366,199 +391,182 @@ server <- function(input, output, session) {
       }
     })
     
+    map <- reactive({
+      leaflet( data = "myMap" ) %>%
+        # set zoom level
+        setView( lng = -87.534256
+                 , lat = 41.941696
+                 , zoom = 11
+        ) %>%
+        
+        # add background to map
+        # addProviderTiles( providers$Hydda.Base ) %>%
+        addTiles( urlTemplate = "https://{s}.tile.openstreetmap.se/hydda/full/{z}/{x}/{y}.png" ) %>%
+        
+        # add zoom out button
+        addEasyButton( easyButton(
+          icon = "ion-android-globe", title = "Zoom Back Out"
+          , onClick = leaflet::JS("function(btn, map){ map.setZoom(11); }")
+        ) ) %>%
+        
+        # add polygon to map
+        addPolygons( data = comarea606 )
+      
+    }) # end of foundational leaflet map
 
   # render leaflet output
   output$myMap <- leaflet::renderLeaflet({
     
-    leaflet( data = "myMap" ) %>%
-            # set zoom level
-            setView( lng = -87.651304
-                     , lat = 41.921438
-                     , zoom = 11
-            ) %>%
-
-            # add background to map
-            # addProviderTiles( providers$Hydda.Base ) %>%
-            addTiles( urlTemplate = "https://{s}.tile.openstreetmap.se/hydda/full/{z}/{x}/{y}.png" ) %>%
-
-            # add zoom out button
-            addEasyButton( easyButton(
-              icon = "ion-android-globe", title = "Zoom Back Out"
-              , onClick = leaflet::JS("function(btn, map){ map.setZoom(11); }")
-            ) ) 
+    # call reactive map
+    map()
       
   }) # end of render leaflet
   
-  # create dynamic parts of map
-  output$dynamicMap <- shiny::renderPlot({
+  # function with all the features that we want to add to the map
+  AddDynamicFeatures <- function( myMap ){
     
     # make north compass icon
     northArrowIcon <- "<img src='http://ian.umces.edu/imagelibrary/albums/userpics/10002/normal_ian-symbol-north-arrow-2.png' style='width:40px;height:60px;'>"
     
-      # if 'All' is selected for
-      # both input$pizzeriaType
-      # add all pizzerias onto map
-      if( input$pizzeriaType == "All" ){
-
-          # make pizzeria marker
-          pizzaIcon <- leaflet::makeIcon(
-            iconUrl = ifelse( test = chicago.pizza$Pizzeria %in% "Giordano's Pizzeria"
-                              , yes = "https://github.com/cenuno/shiny/raw/master/Images/Pizza_Logos/giordanos_logo.png"
-                              , no = "https://github.com/cenuno/shiny/raw/master/Images/Pizza_Logos/lm_logo.png"
-            )
-            , iconWidth = 96
-            , iconHeight = 46
-            , iconAnchorX = 76
-            , iconAnchorY = 45
-          )
-
-          # make custom map title
-          mapTitle <- paste0(
-            "<p style='color:#ed7b46; font-size:15px;'>"
-            , "Exploring "
-            , paste( unique( datasetInput()$Pizzeria )
-                     , collapse = " & "
-                     )
-            , ", 2017"
-            , "</p>"
-            )
+    # make custom map title
+    mapTitle <- paste0(
+      "<p style='color:#ed7b46; font-size:15px;'>"
+      , "Exploring "
+      , paste( unique( datasetInput()$Pizzeria )
+               , collapse = " & "
+      )
+      , ", 2017"
+      , "</p>"
+    )
     
-    # call the baseline leaflet map
-    leaflet::leafletProxy( mapId = "myMap" ) %>%
-      
-      # clear all background markers
-      clearControls() %>%
-      
-      # clear all markers
-      clearMarkers() %>%
-      
-      # add pizza markers
-      addMarkers( data = datasetInput()
-                  , lng = ~Lon
-                  , lat = ~Lat
-                  , icon = pizzaIcon
-                  ) %>%
-      
-      # add custom title
-      addControl( html = mapTitle
-                  , position = "topright"
-      ) %>%
-      
-      # add north arrow marker
-      addControl( html = northArrowIcon
-                  , position = "bottomright"
-                  )
-    # if input$pizzeriaType is anything but 'All'
-    # and input$yelpRating is NULL
-      } else if( input$pizzeriaType != "All" & is.null( input$yelpRating ) ) {
-        # return NULL to the Global Environment
-        return( NULL )
     
-    } else if( input$pizzeriaType != "All" & input$yelpRating == "All" ){
-
-          # make pizzeria marker
-          pizzaIcon <- leaflet::makeIcon(
-            iconUrl = ifelse( test = chicago.pizza$Pizzeria[
-              which( chicago.pizza$Pizzeria %in% input$pizzeriaType )
-            ] %in% "Giordano's Pizzeria"
-                              , yes = "https://github.com/cenuno/shiny/raw/master/Images/Pizza_Logos/giordanos_logo.png"
-                              , no = "https://github.com/cenuno/shiny/raw/master/Images/Pizza_Logos/lm_logo.png"
-            )
-            , iconWidth = 96
-            , iconHeight = 46
-            , iconAnchorX = 76
-            , iconAnchorY = 45
-          )
-
-          # make custom map title
-          mapTitle <- paste0(
-            "<p style='color:#ed7b46; font-size:15px;'>"
-            , "Exploring "
-            , unique( datasetInput()$Pizzeria )
-            , ", 2017"
-            , "</p>"
-          )
-          
-          # call the baseline leaflet map
-          leaflet::leafletProxy( mapId = "myMap" ) %>%
-            
-            # clear all background markers
-            clearControls() %>%
-            
-            # clear all markers
-            clearMarkers() %>%
-            
-            # add pizza markers
-            addMarkers( data = datasetInput()
-                        , lng = ~Lon
-                        , lat = ~Lat
-                        , icon = pizzaIcon
-            ) %>%
-            
-            # add custom title
-            addControl( html = mapTitle
-                        , position = "topright"
-            ) %>%
-            
-            # add north arrow marker
-            addControl( html = northArrowIcon
-                        , position = "bottomright"
-            )
-          
-          } else if( input$pizzeriaType != "All" & input$yelpRating != "All" ){
-
-                # make pizzeria marker
-                pizzaIcon <- leaflet::makeIcon(
-                  iconUrl = ifelse( test = chicago.pizza$Pizzeria[
-                    which( chicago.pizza$Pizzeria %in% input$pizzeriaType )
-                    ] %in% "Giordano's Pizzeria"
-                    , yes = "https://github.com/cenuno/shiny/raw/master/Images/Pizza_Logos/giordanos_logo.png"
-                    , no = "https://github.com/cenuno/shiny/raw/master/Images/Pizza_Logos/lm_logo.png"
-                  )
-                  , iconWidth = 96
-                  , iconHeight = 46
-                  , iconAnchorX = 76
-                  , iconAnchorY = 45
-                )
-
-                # make custom map title
-                mapTitle <- paste0(
-                  "<p style='color:#ed7b46; font-size:15px;'>"
-                  , "Exploring "
-                  , unique( datasetInput()$Pizzeria )
-                  , ", 2017"
-                  , "</p>"
-                )
-                
-                # call the baseline leaflet map
-                leaflet::leafletProxy( mapId = "myMap" ) %>%
-                  
-                  # clear all background markers
-                  clearControls() %>%
-                  
-                  # clear all markers
-                  clearMarkers() %>%
-                  
-                  # add pizza markers
-                  addMarkers( data = datasetInput()
-                              , lng = ~Lon
-                              , lat = ~Lat
-                              , icon = pizzaIcon
-                  ) %>%
-                  
-                  # add custom title
-                  addControl( html = mapTitle
-                              , position = "topright"
-                  ) %>%
-                  
-                  # add north arrow marker
-                  addControl( html = northArrowIcon
-                              , position = "bottomright"
-                  )
-          } # end of if else statements
+    if( input$pizzeriaType != "All" & is.null( input$yelpRating ) ) {
+      # return NULL to the Global Environment
+      return( NULL )
+    } else{
+      
+      leaflet::leafletProxy( mapId = "myMap" ) %>%
+        
+        
+        # clear all background markers
+        clearControls() %>%
+        
+        # clear all markers
+        clearMarkers() %>%
+        
+        # add pizza markers
+        addMarkers( data = datasetInput()
+                    , lng = ~Lon
+                    , lat = ~Lat
+                    , icon = ~pizzaIcon[ datasetInput()$iconType ]
+        ) %>%
+        
+        # add custom title
+        addControl( html = mapTitle
+                    , position = "topright"
+        ) %>%
+        
+        # add north arrow marker
+        addControl( html = northArrowIcon
+                    , position = "bottomright"
+        )
+    } # end of if else statement
     
-  }) # end of dynamicMap
+  }
+  
+  # create a reactive observer
+  shiny::observe({
+    
+    # which sends commands to a Leaflet instance in a shiny app
+    # that customizes the foundational Leaflet map
+    # based on user input
+    leafletProxy( mapId = "myMap" ) %>%
+      
+      # by adding dynamic features, conveniently stored in 
+      # the `AddDynamicFeatures()` map
+      AddDynamicFeatures()
+  })
+  
+  # store the current user-created version
+  # of the Leaflet map for download in 
+  # a reactive expression
+  # Courtesy of Davide, SO June 2, 2016:
+  # https://stackoverflow.com/questions/35384258/save-leaflet-map-in-shiny?noredirect=1&lq=1
+  # Courtesy of SBista, SO May 30, 2017:
+  # https://stackoverflow.com/questions/44259716/how-to-save-a-leaflet-map-in-shiny/44261618#44261618
+  downloadMap <- reactive({
+    
+    # we need to specify coordinates (and zoom level) that we are currently viewing
+    bounds <- input$myMap_bounds
+    latRng <- range(bounds$north, bounds$south)
+    lngRng <- range(bounds$east, bounds$west)
+    
+    # call the baseline Leaflet map
+    map() %>%
+      
+      # add the dynamic features based on UI
+      AddDynamicFeatures() %>%
+        
+      # store the view based on UI
+      setView( lng = ( lngRng[1] + lngRng[2] ) / 2
+               ,  lat = ( latRng[1] + latRng[2] ) / 2
+               , zoom = input$myMap_zoom
+      )
+  }) # end of storing user created map
+  
+  output$download_Map <- downloadHandler(
+    # A string of the filename, including extension,
+    # that the user's web browser should default to
+    # when downloading the file;
+    # or a function that returns such a string.
+    filename = paste0( Sys.Date()
+             , "_ChicagoPizza"
+             , ".pdf"
+             )
 
+    # A function that takes a single argument file
+    # that is a file path (string) of a nonexistent temp file,
+    # and writes the content to that file path.
+    , content = function( file ) {
+      # temporarily switch to the temp dir, in case you do not have write
+      # permission to the current working directory
+      owd <- setwd(tempdir())
+      on.exit(setwd(owd))
+      
+      # using saveWidget and webshot (old)
+      saveWidget(downloadMap()
+                 , file = file
+                 , selfcontained = TRUE
+                 )
+      # webshot( url = "temp.html"
+      #          , file = file
+      #          , cliprect = "viewport"
+      #          )
+
+      # using mapshot to save leaflet map as an image
+        # mapshot( x = downloadMap()
+        #        , file = file
+        #        , cliprect = "viewport" # the clipping rectangle matches the height & width from the viewing port
+        #        )
+      
+      # Warning: Error in system.file: 'package' must be of length 1
+      # Stack trace (innermost first):
+      #   60: system.file
+      # 59: readLines
+      # 58: paste
+      # 57: yaml.load
+      # 56: yaml::yaml.load_file
+      # 55: getDependency
+      # 54: widget_dependencies
+      # 53: htmltools::attachDependencies
+      # 52: toHTML
+      # 51: saveWidget
+      # 50: download$func [/Users/cristiannuno/RStudio_All/shiny/Interactive_UI/app.R#537]
+      #                    1: runApp
+      #                    Error : 'package' must be of length 1
+    }
+    
+  ) # end of downloadHandler
   
   # make DT
   output$myDT <- DT::renderDataTable({
@@ -583,8 +591,8 @@ server <- function(input, output, session) {
                        ) # end of buttons customization
                        
                        # customize the length menu
-                       , lengthMenu = list( c(5, 100, -1) # declare values
-                                            , c(5, 100, "All") # declare titles
+                       , lengthMenu = list( c(10, 100, -1) # declare values
+                                            , c(10, 100, "All") # declare titles
                        ) # end of lengthMenu customization
                        
                        # enable horizontal scrolling due to many columns
@@ -618,8 +626,8 @@ server <- function(input, output, session) {
           ) # end of buttons customization
           
           # customize the length menu
-          , lengthMenu = list( c(5, 100, -1) # declare values
-                               , c(5, 100, "All") # declare titles
+          , lengthMenu = list( c(10, 100, -1) # declare values
+                               , c(10, 100, "All") # declare titles
           ) # end of lengthMenu customization
           
           # enable horizontal scrolling due to many columns
@@ -645,8 +653,8 @@ server <- function(input, output, session) {
           ) # end of buttons customization
           
           # customize the length menu
-          , lengthMenu = list( c(5, 100, -1) # declare values
-                               , c(5, 100, "All") # declare titles
+          , lengthMenu = list( c(10, 100, -1) # declare values
+                               , c(10, 100, "All") # declare titles
           ) # end of lengthMenu customization
           
           # enable horizontal scrolling due to many columns
@@ -656,7 +664,6 @@ server <- function(input, output, session) {
         ) # end of DT creation
     } # end of if else statements
   }) # end of render DT
-        
   
 } # end of server
 
