@@ -242,7 +242,7 @@ sidebar <- dashboardSidebar(
 ## customize body ##
 body <- dashboardBody( 
   fluidRow( 
-    box( title = "Battle of Two Pizzerias: Giordano's v. Lou Malnati's"
+    box( title = "A Few Chicago Pizzerias"
          , status = "info"
          , solidHeader = TRUE
          , collapsible = FALSE
@@ -263,10 +263,10 @@ body <- dashboardBody(
            ) # end of drop down pizerriaType menu
            
            # create placeholder for second widget
-           , shiny::uiOutput( outputId = "yelpFly" )
+           , shiny::uiOutput( outputId = "yelp" )
            
            # create placeholder for export leaflet map widget
-           , shiny::downloadButton( outputId = "download_Map"
+           , shiny::downloadButton( outputId = "downloadMap"
                                   , label = "Download Map"
                                   )
 
@@ -275,14 +275,9 @@ body <- dashboardBody(
          # create placeholder for leaflet map
          , column(
            width = 10
-           , leaflet::leafletOutput( outputId = "myMap"
+           , leaflet::leafletOutput( outputId = "chicagoPizzaMap"
                                      , height = 600
                                      )
-           
-           # add a placeholder for the map to change dynamically
-           # , shiny::plotOutput( outputId = "dynamicMap"
-           #                      , height = 3
-           #                      )
          ) # end of second column
     ) # end of box 1
   ) # end of fluidRow1
@@ -311,6 +306,7 @@ server <- function(input, output, session) {
   # create reactive data frame
   datasetInput <- reactive({
     
+    
     # if 'All' is selected for 
     # input$pizzeriaType
     # add all pizzerias onto map
@@ -323,10 +319,11 @@ server <- function(input, output, session) {
       # if input$pizzeriaType is anything but 'All'
       # and input$yelpRating is NULL
       } else if( input$pizzeriaType != "All" & is.null( input$yelpRating ) ) {
-        # return NULL to the Global Environment
-        return( NULL )
+        # make sure requirements are met
+        # Courtesy of RStudio Shiny
+        # http://shiny.rstudio.com/articles/req.html
+        req( input$yelpRating )
         
-      
       # if 'All' is  NOT selected for 
       # input$pizzeriaType but 
       # 'All" is selected for input$yelpRating
@@ -369,8 +366,12 @@ server <- function(input, output, session) {
   })
   
   
-  # create widget on the fly
-    output$yelpFly <- shiny::renderUI({
+  # create a second UI filter
+  # only when the user selects a 
+  # a specific pizzeria.
+  # This second filter "disappears" whenever
+  # the user selects the "All" choice.
+    output$yelp <- shiny::renderUI({
       if( input$pizzeriaType != "All" ){
         
       shiny::selectizeInput( inputId = "yelpRating"
@@ -391,8 +392,10 @@ server <- function(input, output, session) {
       }
     })
     
-    map <- reactive({
-      leaflet( data = "myMap" ) %>%
+    # Create foundational leaflet map
+    # and store it as a reactive expression
+    foundational.map <- reactive({
+      leaflet() %>%
         # set zoom level
         setView( lng = -87.534256
                  , lat = 41.941696
@@ -415,15 +418,15 @@ server <- function(input, output, session) {
     }) # end of foundational leaflet map
 
   # render leaflet output
-  output$myMap <- leaflet::renderLeaflet({
+  output$chicagoPizzaMap <- leaflet::renderLeaflet({
     
     # call reactive map
-    map()
+    foundational.map()
       
   }) # end of render leaflet
   
   # function with all the features that we want to add to the map
-  AddDynamicFeatures <- function( myMap ){
+  AddDynamicFeatures <- function( map.object ){
     
     # make north compass icon
     northArrowIcon <- "<img src='http://ian.umces.edu/imagelibrary/albums/userpics/10002/normal_ian-symbol-north-arrow-2.png' style='width:40px;height:60px;'>"
@@ -439,14 +442,8 @@ server <- function(input, output, session) {
       , "</p>"
     )
     
-    
-    if( input$pizzeriaType != "All" & is.null( input$yelpRating ) ) {
-      # return NULL to the Global Environment
-      return( NULL )
-    } else{
-      
-      leaflet::leafletProxy( mapId = "myMap" ) %>%
-        
+    # initialize map object here 
+    map.object %>%
         
         # clear all background markers
         clearControls() %>%
@@ -470,9 +467,8 @@ server <- function(input, output, session) {
         addControl( html = northArrowIcon
                     , position = "bottomright"
         )
-    } # end of if else statement
     
-  }
+  } # end of add dynamic features
   
   # create a reactive observer
   shiny::observe({
@@ -480,10 +476,11 @@ server <- function(input, output, session) {
     # which sends commands to a Leaflet instance in a shiny app
     # that customizes the foundational Leaflet map
     # based on user input
-    leafletProxy( mapId = "myMap" ) %>%
+    leafletProxy( mapId = "chicagoPizzaMap" ) %>%
       
       # by adding dynamic features, conveniently stored in 
-      # the `AddDynamicFeatures()` map
+      # the `AddDynamicFeatures()` function
+      # where "chicagoPizzaMap" is the map.object 
       AddDynamicFeatures()
   })
   
@@ -494,27 +491,26 @@ server <- function(input, output, session) {
   # https://stackoverflow.com/questions/35384258/save-leaflet-map-in-shiny?noredirect=1&lq=1
   # Courtesy of SBista, SO May 30, 2017:
   # https://stackoverflow.com/questions/44259716/how-to-save-a-leaflet-map-in-shiny/44261618#44261618
-  downloadMap <- reactive({
-    
+  user.created.map <- reactive({
     # we need to specify coordinates (and zoom level) that we are currently viewing
-    bounds <- input$myMap_bounds
+    bounds <- input$chicagoPizzaMap_bounds
     latRng <- range(bounds$north, bounds$south)
     lngRng <- range(bounds$east, bounds$west)
     
-    # call the baseline Leaflet map
-    map() %>%
+    # call the foundational Leaflet map
+    foundational.map() %>%
       
       # add the dynamic features based on UI
       AddDynamicFeatures() %>%
-        
+      
       # store the view based on UI
       setView( lng = ( lngRng[1] + lngRng[2] ) / 2
                ,  lat = ( latRng[1] + latRng[2] ) / 2
-               , zoom = input$myMap_zoom
+               , zoom = input$chicagoPizzaMap_zoom
       )
   }) # end of storing user created map
   
-  output$download_Map <- downloadHandler(
+  output$downloadMap <- downloadHandler(
     # A string of the filename, including extension,
     # that the user's web browser should default to
     # when downloading the file;
@@ -528,53 +524,42 @@ server <- function(input, output, session) {
     # that is a file path (string) of a nonexistent temp file,
     # and writes the content to that file path.
     , content = function( file ) {
+
       # temporarily switch to the temp dir, in case you do not have write
       # permission to the current working directory
-      owd <- setwd(tempdir())
-      on.exit(setwd(owd))
+      owd <- setwd( tempdir() )
+      on.exit( setwd( owd ) )
       
+      
+      # using mapshot to save leaflet map as a PDF
+      mapshot( x = user.created.map()
+               , file = file
+               , cliprect = "viewport" # the clipping rectangle matches the height & width from the viewing port
+               , selfcontained = FALSE # when this was not specified, the function for produced a PDF of two pages: one of the leaflet map, the other a blank page.
+               )
+      
+      # these two functions, when used together
+      # also worked to produce a PDF output of the leaflet map
       # using saveWidget and webshot (old)
-      saveWidget(downloadMap()
-                 , file = file
-                 , selfcontained = TRUE
-                 )
-      # webshot( url = "temp.html"
-      #          , file = file
-      #          , cliprect = "viewport"
-      #          )
-
-      # using mapshot to save leaflet map as an image
-        # mapshot( x = downloadMap()
-        #        , file = file
-        #        , cliprect = "viewport" # the clipping rectangle matches the height & width from the viewing port
-        #        )
+      # htmlwidgets::saveWidget( widget = user.created.map()
+      #                          , file = "temp.html"
+      #                          , selfcontained = FALSE
+      #                          )
+      # webshot::webshot( url = "temp.html"
+      #                   , file = file
+      #                   , cliprect = "viewport"
+      #                   )
       
-      # Warning: Error in system.file: 'package' must be of length 1
-      # Stack trace (innermost first):
-      #   60: system.file
-      # 59: readLines
-      # 58: paste
-      # 57: yaml.load
-      # 56: yaml::yaml.load_file
-      # 55: getDependency
-      # 54: widget_dependencies
-      # 53: htmltools::attachDependencies
-      # 52: toHTML
-      # 51: saveWidget
-      # 50: download$func [/Users/cristiannuno/RStudio_All/shiny/Interactive_UI/app.R#537]
-      #                    1: runApp
-      #                    Error : 'package' must be of length 1
     }
     
   ) # end of downloadHandler
   
-  # make DT
+  # Create an HTML table widget using
+  # the DataTables library
+  # and allows for the user to download the data
   output$myDT <- DT::renderDataTable({
     
-      
-    # if pizzeriaType is All
-    if( input$pizzeriaType == "All" ){
-      DT::datatable( data = datasetInput()
+      DT::datatable( data = datasetInput() # reactive data changes based on UI
                      , extensions = 'Buttons'
                      , options = list( 
                        autoWidth = TRUE
@@ -601,68 +586,6 @@ server <- function(input, output, session) {
                      ) # end of options
                      ) # end of DT creation
       
-      # if input$pizzeriaType is anything but "All"
-      # and
-      # input$yelpRating is NULL
-    } else if( input$pizzeriaType != "All" & is.null( input$yelpRating ) ) {
-      # return NULL to the Global Environment
-      return( NULL )
-      
-    } else if( input$pizzeriaType != "All" & input$yelpRating == "All" ){
-      DT::datatable( data = datasetInput()
-        , extensions = 'Buttons'
-        , options = list( 
-          autoWidth = TRUE
-          , dom = "Blfrtip"
-          , buttons = list( 
-            "copy"
-            , list( extend = "collection"
-                    , buttons = c( "csv"
-                                   , "excel"
-                                   , "pdf"
-                    )
-                    , text = "Download"
-            ) # end of download button
-          ) # end of buttons customization
-          
-          # customize the length menu
-          , lengthMenu = list( c(10, 100, -1) # declare values
-                               , c(10, 100, "All") # declare titles
-          ) # end of lengthMenu customization
-          
-          # enable horizontal scrolling due to many columns
-          , scrollX = TRUE
-          
-        ) # end of options
-        ) # end of DT creation
-    } else if( input$pizzeriaType != "All" & input$yelpRating != "All" ){
-      DT::datatable( data = datasetInput() 
-        , extensions = 'Buttons'
-        , options = list( 
-          autoWidth = TRUE
-          , dom = "Blfrtip"
-          , buttons = list( 
-            "copy"
-            , list( extend = "collection"
-                    , buttons = c( "csv"
-                                   , "excel"
-                                   , "pdf"
-                    )
-                    , text = "Download"
-            ) # end of download button
-          ) # end of buttons customization
-          
-          # customize the length menu
-          , lengthMenu = list( c(10, 100, -1) # declare values
-                               , c(10, 100, "All") # declare titles
-          ) # end of lengthMenu customization
-          
-          # enable horizontal scrolling due to many columns
-          , scrollX = TRUE
-          
-        ) # end of options
-        ) # end of DT creation
-    } # end of if else statements
   }) # end of render DT
   
 } # end of server
@@ -670,7 +593,4 @@ server <- function(input, output, session) {
 ## run shinyApp ##
 shiny::shinyApp( ui = ui, server = server)
 
-
-
-
-
+## end of shinyApp ##
