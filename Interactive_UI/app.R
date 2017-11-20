@@ -252,6 +252,14 @@ body <- dashboardBody(
          , column(
            width = 2
            
+           # start drop down cca menu
+           , shiny::selectizeInput( inputId = "cca"
+                                    , label = shiny::h3( "Highlight a Community Area" )
+                                    , choices = sort( comarea606$community )
+                                    , selected = NULL
+                                    , multiple = TRUE
+                                    )
+           
            # start drop down pizzeriaType menu
            , shiny::selectizeInput( inputId = "pizzeriaType"
                                     , label = shiny::h3( "Select Your Favorite Pizzeria:" ) 
@@ -365,6 +373,21 @@ server <- function(input, output, session) {
     } # end of if else statement
   })
   
+  # create reactive boundaries
+  ccaInput <- reactive({
+    if( is.null( input$cca ) ){
+      req( input$cca )
+    } else{
+      # filter comarea606
+      # so that it contains all polygons whose $community values
+      # are in input$cca
+      comarea606 <- comarea606[ which( comarea606$community %in% input$cca) , ]
+      
+      # return the filtered Global Environment
+      return( comarea606 )
+    }
+  })
+  
   
   # create a second UI filter
   # only when the user selects a 
@@ -444,29 +467,37 @@ server <- function(input, output, session) {
     
     # initialize map object here 
     map.object %>%
-        
-        # clear all background markers
-        clearControls() %>%
-        
-        # clear all markers
-        clearMarkers() %>%
-        
-        # add pizza markers
-        addMarkers( data = datasetInput()
-                    , lng = ~Lon
-                    , lat = ~Lat
-                    , icon = ~pizzaIcon[ datasetInput()$iconType ]
-        ) %>%
-        
-        # add custom title
-        addControl( html = mapTitle
-                    , position = "topright"
-        ) %>%
-        
-        # add north arrow marker
-        addControl( html = northArrowIcon
-                    , position = "bottomright"
-        )
+      
+      # clear all background markers
+      clearControls() %>%
+      
+      # clear all markers
+      clearMarkers() %>%
+      
+      # add pizza markers
+      addMarkers( data = datasetInput()
+                  , lng = ~Lon
+                  , lat = ~Lat
+                  , icon = ~pizzaIcon[ datasetInput()$iconType ]
+      ) %>%
+      
+      # highlight cca(s) of interest(s)
+      addPolylines( data = ccaInput()
+                    , stroke = TRUE
+                    , weight = 10
+                    , fillOpacity = 1
+                    , color = "orange"
+                    ) %>%
+      
+      # add custom title
+      addControl( html = mapTitle
+                  , position = "topright"
+      ) %>%
+      
+      # add north arrow marker
+      addControl( html = northArrowIcon
+                  , position = "bottomright"
+      )
     
   } # end of add dynamic features
   
