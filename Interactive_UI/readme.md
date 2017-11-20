@@ -15,6 +15,7 @@ install.packages( c( "shiny"              # Web Application Framework for R
                      , "leaflet"          # Create Interactive Web Maps with the JavaScript 'Leaflet' Library
                      , "htmltools"        # Tools for HTML
                      , "htmlwidgets"      # HTML Widgets for R
+                     , "webshot"          # Take a screenshot of a URL
                      , "dplyr"            # A Grammar of Data Manipulation
                      , "magrittr"         # Ceci n'est pas une pipe
                      , "DT"               # A Wrapper of the JavaScript Library 'DataTables'
