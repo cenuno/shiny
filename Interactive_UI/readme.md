@@ -2,7 +2,7 @@
 
 ## Introduction
 
-`Interactive_UI` stores `r` code to make a shiny user-interface interactive.
+Tips and tricks on making reproducible Shiny apps.
 
 ## Run App Yourself
 
@@ -27,7 +27,7 @@ library( shiny )
 
 # call Shiny app from GitHub
 shiny::runUrl( url = "https://github.com/cenuno/shiny/archive/master.zip"
-                 , subdir = "Interactive_UI"
+                 , subdir = "Interactive_UI/Dynamic_Pizza/app.R"
                )
 
 ## end of script ##
