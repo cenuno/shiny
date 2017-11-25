@@ -28,11 +28,6 @@ library( webshot )            # Take a screenshot of a URL
 #
 #
 # My example: pizza.
-# Here in Chicago, I love Lou Malnati's deep dish pizza. 
-# But some prefer Giordano's. 
-# I'm going to make reproducible data showing
-# Two Lou Malnati's locations and two Giordano's locations. 
-# Then, I'll show a sample of their different menu options.
 chicago.pizza <- data.frame( Pizzeria = c( rep( x = "Giordano's Pizzeria"
                                                 , times = 2
                                                 )
