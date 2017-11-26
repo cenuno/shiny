@@ -1,0 +1,52 @@
+/* Main Title Background Color */
+.skin-blue .main-header .logo {
+  background-color: #46BDED;
+  
+}
+
+/* Main Title Hover Background Color */
+.skin-blue .main-header .logo:hover {
+  background-color: #46BDED;
+  
+}
+
+/* navbar (rest of the header) */
+.skin-blue .main-header .navbar {
+  background-color: #46BDED;
+  
+}        
+
+/* custom logos in the navbar */
+.skin-blue .main-header .navbar .navbar-custom-menu .dropdown a:hover{
+  background-color: #FFFFFF;
+  
+}
+
+/* main sidebar */
+.skin-blue .main-sidebar {
+  background-color: #46BDED;
+  
+}
+
+/* active selected tab in the sidebarmenu */
+.skin-blue .main-sidebar .sidebar .sidebar-menu .active a{
+  background-color: #FFFFFF;
+  color: #46BDED;
+  
+}
+
+/* toggle button when hovered  */    
+.skin-blue .main-header .navbar .sidebar-toggle:hover{
+  background-color: #FFFFFF;
+  color: #46BDED;
+  
+}
+
+
+/* infoBox header */
+.box.box-solid.box-info>.box-header{
+  color: #FFFFFF;
+  background: #46BDED;
+  
+}
+
