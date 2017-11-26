@@ -17,6 +17,7 @@ library( magrittr )           # Ceci n'est pas une pipe
 library( DT )                 # A Wrapper of the JavaScript Library 'DataTables'
 library( mapview )            # Interactive Viewing of Spatial Data in R
 library( webshot )            # Take a screenshot of a URL
+library( stringr )            # Simple, Consistent Wrappers for Common String Operations
 ##############################
 ## Create Reproducible Data ##
 ##############################
@@ -146,15 +147,11 @@ pizzaIcon <- leaflet::iconList(
     iconUrl = "https://giordanos.com/content/uploads/logo-red.png"
     , iconWidth = 96
     , iconHeight = 46
-    , iconAnchorX = 76
-    , iconAnchorY = 45
   )
   , lmIcon = leaflet::makeIcon(
     iconUrl = "https://www.loumalnatis.com/resources/assets/images/logo2x.png"
     , iconWidth = 96
     , iconHeight = 46
-    , iconAnchorX = 76
-    , iconAnchorY = 45
   )
   , dpIcon = leaflet::makeIcon(
     iconUrl = "http://diylogodesigns.com/blog/wp-content/uploads/2017/08/Dominos-Pizza-icon-logo-vector-png.png"
@@ -165,8 +162,6 @@ pizzaIcon <- leaflet::iconList(
     iconUrl = "http://molisepr.com/blog/wp-content/uploads/2015/06/Ginos-East.jpg"
     , iconWidth = 96
     , iconHeight = 46
-    , iconAnchorX = 76
-    , iconAnchorY = 45
   )
 ) # end of iconList
 
@@ -206,7 +201,8 @@ colnames( chicago.pizza )
 # that are called inside the UI
 
 ## customize header ##
-header <- dashboardHeader( title = "Chicago Deep Dish"
+header <- dashboardHeader( title = "Exploring a Few Chicago Pizzerias"
+                           , titleWidth = "325" # The width of the title area. This must either be a number which specifies the width in pixels, or a string that specifies the width in CSS units.
                            ,  tags$li( a( href = "https://cenuno.github.io/"
                                                , img( src = "https://github.com/cenuno/Spatial_Visualizations/raw/master/Images/UrbanDataScience_logo_2017-08-26.png"
                                                       , title = "Urban Data Science (GitHub)"
@@ -236,8 +232,15 @@ sidebar <- dashboardSidebar(
 
 ## customize body ##
 body <- dashboardBody( 
-  fluidRow( 
-    box( title = "A Few Chicago Pizzerias"
+  
+  # Add some custom CSS to make the title background area the same
+  # color as the rest of the header.
+  tags$head(
+    tags$link(rel = "stylesheet", type = "text/css", href = "dynamic_pizza.css")
+  )
+  
+  , fluidRow( 
+    box( title = NULL
          , status = "info"
          , solidHeader = TRUE
          , collapsible = FALSE
@@ -247,30 +250,70 @@ body <- dashboardBody(
          , column(
            width = 2
            
-           # start drop down cca menu
-           , shiny::selectizeInput( inputId = "cca"
-                                    , label = shiny::h3( "Highlight a Community Area" )
-                                    , choices = sort( comarea606$community )
-                                    , selected = NULL
-                                    , multiple = TRUE
-                                    )
+           # Name the section
+           , shiny::h1( "Geography Preference")
+           
+           # create a paragraph break
+           , shiny::p()
+           
+           # Give click instructions
+           , shiny::h3( "Click Map to Highlight")
+           
+           # start community area user-click DataTable output
+           , DT::dataTableOutput( outputId = "ccaDT" )
+           
+           # add a paragraph break
+           , shiny::p()
+           
+           # start clear highlights button
+           , shiny::actionButton( inputId = "clearHighlight"
+                                  , icon = icon( name = "eraser" )
+                                  , label = "Clear Map of Highlights"
+                                  , style = "font-size: 19px;
+                                  height: 50px;
+                                  width: 100%; 
+                                  color: #FFFFFF; 
+                                  background-color: #FC9CB0; 
+                                  border-color: #FC9CB0"
+                                  )
+           
+           
+           # add horizontal line
+           , shiny::hr()
+           
+           # name the section
+           , shiny::h1("Pizza Preference")
+           
+           # add a paragraph break
+           , shiny::p()
            
            # start drop down pizzeriaType menu
            , shiny::selectizeInput( inputId = "pizzeriaType"
                                     , label = shiny::h3( "Select Your Favorite Pizzeria:" ) 
                                     , choices = c("All"
-                                                  , sort( unique( chicago.pizza$Pizzeria ) ) 
-                                    )
+                                                  , sort( unique( chicago.pizza$Pizzeria ) )
+                                                  )
                                     , selected = "All"
-                                    #, multiple = TRUE
-           ) # end of drop down pizerriaType menu
+                                  ) # end of drop down pizerriaType menu
            
            # create placeholder for second widget
            , shiny::uiOutput( outputId = "yelp" )
            
+           # add a paragraph break
+           , shiny::p()
+           
            # create placeholder for export leaflet map widget
            , shiny::downloadButton( outputId = "downloadMap"
+                                  , icon = icon( name = "camera-retro" )
                                   , label = "Download Map"
+                                  , style = "font-size: 19px;
+                                  text-align: center;
+                                  align-content: center;
+                                  height: 50px;
+                                  width: 100%; 
+                                  color: #FFFFFF; 
+                                  background-color: #C2D7AF; 
+                                  border-color: #C2D7AF"
                                   )
 
          ) # end of first column
@@ -279,7 +322,7 @@ body <- dashboardBody(
          , column(
            width = 10
            , leaflet::leafletOutput( outputId = "chicagoPizzaMap"
-                                     , height = 600
+                                     , height = 800
                                      )
          ) # end of second column
     ) # end of box 1
@@ -291,7 +334,7 @@ body <- dashboardBody(
       , solidHeader = TRUE
       , collapsible = FALSE
       , width = 12
-      , DT::dataTableOutput( outputId = "myDT" )
+      , DT::dataTableOutput( outputId = "pizzaDT" )
     ) # end of box 2
   ) # end of fluidRow2
   ) # end of dashboard body
@@ -306,29 +349,9 @@ ui <- dashboardPage(
 # Define server logic
 server <- function(input, output, session) {
   
-  # create an event handler
-  # which highlights a geography when a user clicks on the map
-  click_geography <- shiny::eventReactive( input$chicagoPizzaMap_click_shape, {
-    
-    if( is.null( input$chicagoPizzaMap_shape_click ) ){
-      req( input$chicagoPizzaMap_shape_click )
-    } else{
-      # store the geography of interest
-      geography.x <- input$chicagoPizzaMap_shape_click
-      
-      # filter the community area
-      geography.y <- geography.x$community
-      
-      # return geography.y to the Global Environment
-      return( geography.y )
-      
-      } # end of if else statement
-  
-  }) # end of click_geography event
   
   # create reactive data frame
   datasetInput <- shiny::reactive({
-    
     
     # if 'All' is selected for 
     # input$pizzeriaType
@@ -388,20 +411,6 @@ server <- function(input, output, session) {
     } # end of if else statement
   })
   
-  # create reactive boundaries
-  ccaInput <- shiny::reactive({
-    if( is.null( input$cca ) ){
-      req( input$cca )
-    } else{
-      # filter comarea606
-      # so that it contains all polygons whose $community values
-      # are in input$cca
-      comarea606 <- comarea606[ which( comarea606$community %in% input$cca) , ]
-      
-      # return the filtered Global Environment
-      return( comarea606 )
-    }
-  })
   
   
   # create a second UI filter
@@ -435,14 +444,17 @@ server <- function(input, output, session) {
     foundational.map <- shiny::reactive({
       leaflet() %>%
         # set zoom level
-        setView( lng = -87.534256
-                 , lat = 41.941696
+        # so that all 77 community areas can be seen when the
+        # map is opened
+        # Note: the lng/lat pair is northeast of Promontory Point
+        # between West Pershing Rd and W 47th st
+        setView( lng = -87.567215
+                 , lat = 41.822582
                  , zoom = 11
         ) %>%
         
         # add background to map
-        # addProviderTiles( providers$Hydda.Base ) %>%
-        addTiles( urlTemplate = "https://{s}.tile.openstreetmap.se/hydda/full/{z}/{x}/{y}.png" ) %>%
+        addTiles( urlTemplate = "https://{s}.tile.openstreetmap.se/hydda/base/{z}/{x}/{y}.png" ) %>%
         
         # add zoom out button
         addEasyButton( easyButton(
@@ -451,7 +463,27 @@ server <- function(input, output, session) {
         ) ) %>%
         
         # add polygon to map
-        addPolygons( data = comarea606 ) 
+        addPolygons( data = comarea606
+                     , fillOpacity = 0
+                     , opacity = 0.8
+                     , color = "#ED7B46" # orange colored polygons
+                     , weight = 3
+                     , layerId = comarea606$community
+                     , group = "click.list"
+                     , label = str_to_title( comarea606@data$community )
+                     , labelOptions = popupOptions( textsize = "25px"
+                                                    , textOnly = TRUE
+                                                    , style = list(
+                                                      "color" = "#000000" # 
+                                                      , "font-family" = "Ostrich Sans Black black"
+                                                      , "font-weight" =  "bold"
+                                                    )
+                     )
+                     , highlightOptions = highlightOptions( color = "#161F48"
+                                                            , weight = 10
+                                                            , opacity = 0.2 # make the hover light so that the label is still readable
+                     )
+        )
       
     }) # end of foundational leaflet map
 
@@ -463,6 +495,99 @@ server <- function(input, output, session) {
       
   }) # end of render leaflet
   
+  
+  # store the list of clicked polygons in a vector
+  click.list <- shiny::reactiveValues( ids = vector() )
+  
+  # observe where the user clicks on the leaflet map
+  # during the Shiny app session
+  # Courtesy of two articles:
+  # https://stackoverflow.com/questions/45953741/select-and-deselect-polylines-in-shiny-leaflet
+  # https://rstudio.github.io/leaflet/shiny.html
+  shiny::observeEvent( input$chicagoPizzaMap_shape_click, {
+    
+    # store the click(s) over time
+    click <- input$chicagoPizzaMap_shape_click
+    
+    # store the polygon ids which are being clicked
+    click.list$ids <- c( click.list$ids, click$id )
+    
+    # filter the spatial data frame
+    # by only including polygons
+    # which are stored in the click.list$ids object
+    lines.of.interest <- comarea606[ which( comarea606$community %in% click.list$ids ) , ]
+    
+    # if statement
+    if( is.null( click$id ) ){
+      # check for required values, if true, then the issue
+      # is "silent". See more at: ?req
+      req( click$id )
+      
+    } else if( !click$id %in% lines.of.interest@data$id ){
+      
+      # call the leaflet proxy
+      leaflet::leafletProxy( mapId = "chicagoPizzaMap" ) %>%
+        # and add the polygon lines
+        # using the data stored from the lines.of.interest object
+        addPolylines( data = lines.of.interest
+                      , color = "#161F48"
+                      , weight = 5
+                      , opacity = 1
+        ) 
+      
+      # create the cca DataTable output
+      output$ccaDT <- DT::renderDataTable({
+        
+        # transform $community from UPPERCASE
+        # to Title Case using the `stringr` package
+        lines.of.interest@data$community <- 
+          stringr::str_to_title( string = 
+                                   lines.of.interest@data$community
+                                 )
+        
+        # create the datatable
+        datatable( data = lines.of.interest@data[ c( "community"
+                                                      , "area_numbe"
+                                                      )
+                                                    ] # limit the df to only two columns
+                   , rownames = FALSE
+                   , caption = "Table 1. Community Areas of Interest"
+                   , colnames = c( "Community Area Name"
+                                     , "Community Area Number"
+                                     )
+                   , extensions = "Buttons"
+                   , options = list( 
+                     autoWidth = TRUE
+                     , dom = "Blfrtip" # customize the download button so that the "Show X entries" button remains, https://github.com/cenuno/shiny/tree/master/DT-Download-All-Rows-Button#customizing-dt-download-button
+                     , searching = FALSE # disable the search box, courtesy of https://shiny.rstudio.com/gallery/datatables-options.html
+                     , paging = FALSE # disable pagination, courtesy of https://shiny.rstudio.com/gallery/datatables-options.html
+                     , buttons = list(
+                       list( extend = "collection"
+                             , buttons = c( "csv"
+                                            , "pdf"
+                             )
+                             , text = "Download Community Area Info"
+                       ) # end of download button
+                     ) # end of buttons customization
+                    
+                     
+                     # set to TRUE to configure the table to automatically fill it's containing element.
+                     , fillContainer = TRUE
+  
+                     # enable vertical scrolling to freeze number of observable rows
+                     , scrollY = "100px"
+                     
+                   ) # end of options customization
+                   
+        ) # end of DT creation
+        
+      }) # end of rendering DT
+      
+    } # end of if else statement
+    
+  }) # end of shiny::observeEvent({})
+  
+  
   # function with all the features that we want to add to the map
   AddDynamicFeatures <- function( map.object ){
     
@@ -471,12 +596,11 @@ server <- function(input, output, session) {
     
     # make custom map title
     mapTitle <- paste0(
-      "<p style='color:#ed7b46; font-size:15px;'>"
+      "<p style='color:#ED7B46; font-size:20px;'>"
       , "Exploring "
       , paste( unique( datasetInput()$Pizzeria )
-               , collapse = " & "
+               , collapse = ", "
       )
-      , ", 2017"
       , "</p>"
     )
     
@@ -489,24 +613,12 @@ server <- function(input, output, session) {
       # clear all markers
       clearMarkers() %>%
       
-      # remove shapes
-     # removeShape( layerId = "highlight_polylines") %>%
-      
       # add pizza markers
       addMarkers( data = datasetInput()
                   , lng = ~Lon
                   , lat = ~Lat
                   , icon = ~pizzaIcon[ datasetInput()$iconType ]
       ) %>%
-      
-      # highlight cca(s) of interest(s)
-      addPolylines( data = ccaInput()
-                    , stroke = TRUE
-                    , weight = 10
-                    , fillOpacity = 1
-                    , color = "orange"
-                    , layerId = "highlight_polylines"
-                    ) %>%
       
       # add custom title
       addControl( html = mapTitle
@@ -523,8 +635,6 @@ server <- function(input, output, session) {
   # create a reactive observer
   shiny::observe({
     
-   # req( click_geography() ) # do this if the click_geography is not null
-    
     # which sends commands to a Leaflet instance in a shiny app
     # that customizes the foundational Leaflet map
     # based on user input
@@ -534,7 +644,36 @@ server <- function(input, output, session) {
       # the `AddDynamicFeatures()` function
       # where "chicagoPizzaMap" is the map.object 
       AddDynamicFeatures()
+    
   })
+  
+  # Create the logic for the "Clear the map" action button
+  # which will clear the map of all user-created highlights
+  # and display a clean version of the leaflet map
+  shiny::observeEvent( input$clearHighlight, {
+    
+    # recreate $chicagoPizzaMap
+    output$chicagoPizzaMap <- leaflet::renderLeaflet({
+      
+      # first
+      # set the reactive value of click.list$ids to NULL
+      click.list$ids <- NULL
+      
+      # second
+      # recall the foundational.map() object
+      foundational.map() %>%
+        
+        # by adding dynamic features, conveniently stored in 
+        # the `AddDynamicFeatures()` function
+        # where "chicagoPizzaMap" is the map.object 
+        AddDynamicFeatures()
+      
+    }) # end of re-rendering $chicagoPizzaMap
+    
+    # undo the output$ccaDT
+    output$ccaDT <- renderDataTable({})
+    
+  }) # end of clearHighlight action button logic
   
   # store the current user-created version
   # of the Leaflet map for download in 
@@ -554,13 +693,25 @@ server <- function(input, output, session) {
       
       # add the dynamic features based on UI
       AddDynamicFeatures() %>%
-      
-      # store the view based on UI
-      setView( lng = ( lngRng[1] + lngRng[2] ) / 2
-               ,  lat = ( latRng[1] + latRng[2] ) / 2
-               , zoom = input$chicagoPizzaMap_zoom
-      )
+          
+          # store the view based on UI
+          setView( lng = ( lngRng[1] + lngRng[2] ) / 2
+                   ,  lat = ( latRng[1] + latRng[2] ) / 2
+                   , zoom = input$chicagoPizzaMap_zoom
+          ) %>%
+          
+          # and add the polygon lines
+          # by filting comarea606 by those $community values
+          # which appear in click.list$ids
+          addPolylines( data = comarea606[ which( comarea606$community %in% click.list$ids ) , ]
+                        , color = "#161F48"
+                        , weight = 5
+                        , opacity = 1
+          ) 
+        
+
   }) # end of storing user created map
+  
   
   output$downloadMap <- downloadHandler(
     # A string of the filename, including extension,
@@ -582,13 +733,15 @@ server <- function(input, output, session) {
       owd <- setwd( tempdir() )
       on.exit( setwd( owd ) )
       
-      
-      # using mapshot to save leaflet map as a PDF
-      mapshot( x = user.created.map()
-               , file = file
-               , cliprect = "viewport" # the clipping rectangle matches the height & width from the viewing port
-               , selfcontained = FALSE # when this was not specified, the function for produced a PDF of two pages: one of the leaflet map, the other a blank page.
-               )
+      shiny::observe( input$chicagoPizzaMap_shape_click,{
+        # using mapshot to save leaflet map as a PDF
+        mapshot( x = user.created.map()
+                 , file = file
+                 , cliprect = "viewport" # the clipping rectangle matches the height & width from the viewing port
+                 , selfcontained = FALSE # when this was not specified, the function for produced a PDF of two pages: one of the leaflet map, the other a blank page.
+        )
+      })
+
       
       # these two functions, when used together
       # also worked to produce a PDF output of the leaflet map
@@ -609,34 +762,35 @@ server <- function(input, output, session) {
   # Create an HTML table widget using
   # the DataTables library
   # and allows for the user to download the data
-  output$myDT <- DT::renderDataTable({
+  output$pizzaDT <- DT::renderDataTable({
     
       DT::datatable( data = datasetInput() # reactive data changes based on UI
                      , extensions = 'Buttons'
+                     , caption = "Table 2. Sample of Chicago Pizzerias"
                      , options = list( 
                        autoWidth = TRUE
+                       , paging = FALSE # disable pagination, courtesy of https://shiny.rstudio.com/gallery/datatables-options.html
                        , dom = "Blfrtip"
-                       , buttons = list( 
-                         "copy"
-                         , list( extend = "collection"
-                                 , buttons = c( "csv"
-                                                , "excel"
-                                                , "pdf"
-                                 )
-                                 , text = "Download"
-                         ) # end of download button
-                       ) # end of buttons customization
+                       , buttons = list(
+                         list( extend = "collection"
+                               , buttons = c( "csv"
+                                              , "pdf"
+                                              )
+                               , text = "Download Chicago Pizza"
+                               ) # end of download button
+                      ) # end of buttons customization
                        
-                       # customize the length menu
-                       , lengthMenu = list( c(10, 100, -1) # declare values
-                                            , c(10, 100, "All") # declare titles
-                       ) # end of lengthMenu customization
-                       
-                       # enable horizontal scrolling due to many columns
-                       , scrollX = TRUE
-                       
-                     ) # end of options
-                     ) # end of DT creation
+                     # customize the length menu
+                     , lengthMenu = list( c(10, -1) # declare values
+                                          , c("10", "All" ) # declare titles
+                     ) # end of lengthMenu customization
+                     
+                     # enable horizontal scrolling due to many columns
+                     , scrollX = TRUE
+                     
+                     ) # end of options customization
+                     
+      ) # end of DT creation
       
   }) # end of render DT
   
