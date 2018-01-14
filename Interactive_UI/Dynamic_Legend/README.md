@@ -23,7 +23,7 @@ library( shiny )
 
 # Run shiny app from your R/RStudio Console
 shiny::runUrl( url = "https://github.com/cenuno/shiny/archive/master.zip"
-                , subdir = "Dynamic_Legend"
+                , subdir = "Interactive_UI/Dynamic_Legend"
                 )
 ```
 
