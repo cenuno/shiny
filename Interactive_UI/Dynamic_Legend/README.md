@@ -1,6 +1,6 @@
 # Overview
 
-![](/Users/cristiannuno/Desktop/chicago_SE_2008_2012_ss.png)
+![](https://github.com/cenuno/shiny/raw/master/Images/chicago_SE_2008_2012_ss.png)
 
 This Shiny app updates a Leaflet map's legend based on which layer - socioeconomic variable - the user selects on the top right of the map. 
 
