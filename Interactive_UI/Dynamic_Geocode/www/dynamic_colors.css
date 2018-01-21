@@ -1,5 +1,5 @@
 /* Highlight clickable */
-.leaflet-clickable path:hover {
+.leaflet-zoom-animated .leaflet-clickable g:hover {
   cursor: pointer;
   color: #F7F94E;
   
