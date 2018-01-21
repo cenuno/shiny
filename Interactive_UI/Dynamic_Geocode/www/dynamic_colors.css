@@ -1,6 +1,15 @@
-/* Highlight clickable */
-.leaflet-zoom-animated .leaflet-clickable g:hover {
-  cursor: pointer;
-  color: #F7F94E;
-  
+/* Highlight leaflet clickable and make it larger */
+#myMap .leaflet-map-pane .leaflet-objects-pane .leaflet-overlay-pane .leaflet-zoom-animated .leaflet-clickable:hover{
+  fill: #9A5710;
+  transform: scale(1.8);
 }
+
+/* Specifies the point which should be used
+as the origin point for the transform. 
+Thank you, Harry via SO https://stackoverflow.com/questions/33449452/how-to-make-svg-larger-on-hover */
+#myMap .leaflet-map-pane .leaflet-objects-pane .leaflet-overlay-pane .leaflet-zoom-animated .leaflet-clickable {
+  transition: all 0.5s;
+  transform-origin: 50% 50%;
+}
+
+/* end of script */
