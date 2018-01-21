@@ -1,0 +1,6 @@
+/* Highlight clickable */
+path.leaflet-clickable #map {
+  cursor: pointer;
+  color: #F7F94E;
+  
+}
