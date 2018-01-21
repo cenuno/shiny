@@ -1,5 +1,5 @@
 /* Highlight clickable */
-path.leaflet-clickable #map {
+.leaflet-clickable path:hover {
   cursor: pointer;
   color: #F7F94E;
   
