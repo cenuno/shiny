@@ -13,6 +13,7 @@ library( sp )
 library( rgdal )
 
 # load necessary data
+# to see the data, click here: https://data.cityofchicago.org/Education/Chicago-Public-Schools-School-Locations-SY1718/4g38-vs8v
 chicago.public.school.locations.sy1718 <-
   rgdal::readOGR( dsn = "https://data.cityofchicago.org/api/geospatial/4g38-vs8v?method=export&format=GeoJSON"
                   , layer = "OGRGeoJSON"
