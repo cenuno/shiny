@@ -59,7 +59,7 @@ server <- function( input, output){
                                  , "12.9% - 16.9%"
                                  , "17.1% - 21.7%"
                                  , "23.4% - 29.6%"
-                                 , "29.5% - 56.5%" ) ) %>%
+                                 , "29.8% - 56.5%" ) ) %>%
         
         addControl( html = northArrowIcon
                     , position = "bottomleft" ) %>%
@@ -77,10 +77,10 @@ server <- function( input, output){
                    , colors = unique( comarea606@data[ order( comarea606@data$PERCENT.AGED.16..UNEMPLOYED ) , ]$color_PERCENT.AGED.16..UNEMPLOYED )
                    , opacity = 1
                    , labels = c( "4.7% - 8.7%"
-                                 , "12.9% - 16.9%"
-                                 , "17.1% - 21.7%"
-                                 , "23.4% - 29.6%"
-                                 , "29.8% - 56.5%" ) ) %>%
+                                 , "8.8% - 11.7%"
+                                 , "12.1% - 16.5%"
+                                 , "16.7% - 21.1%"
+                                 , "21.2% - 35.9%" ) ) %>%
         
         addControl( html = northArrowIcon
                     , position = "bottomleft" ) %>%
@@ -119,7 +119,7 @@ server <- function( input, output){
                    , colors = unique( comarea606@data[ order( comarea606@data$PERCENT.AGED.UNDER.18.OR.OVER.64 ) , ]$color_PERCENT.AGED.UNDER.18.OR.OVER.64)
                    , opacity = 1
                    , labels = c( "13.5% - 30.7%"
-                                 , "31.6% - 36.4%"
+                                 , "31.0% - 36.4%"
                                  , "36.8% - 39.0%"
                                  , "39.2% - 41.0%"
                                  , "41.1% - 51.5%" ) ) %>%
