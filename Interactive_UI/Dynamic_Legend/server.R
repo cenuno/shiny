@@ -80,7 +80,7 @@ server <- function( input, output){
                                  , "12.9% - 16.9%"
                                  , "17.1% - 21.7%"
                                  , "23.4% - 29.6%"
-                                 , "29.5% - 56.5%" ) ) %>%
+                                 , "29.8% - 56.5%" ) ) %>%
         
         addControl( html = northArrowIcon
                     , position = "bottomleft" ) %>%
